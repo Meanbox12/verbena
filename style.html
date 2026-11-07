@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Verbena Style Testing</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    </head>
+
+    <link href="https://fonts.cdnfonts.com/css/br-segma" rel="stylesheet">
+
+    <style>
+
+        :root {
+            --background-color: #e1f7dc;
+            --sidebar-color: #ffffff;
+            --border-color: #163f12;
+            --primary-text-color: #163f12;
+            --secondary-text-color: #6aa56d;
+            --tertiary-text-color: #000000;
+        }
+
+        body {
+            background-color: var(--background-color);
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: row;
+        }
+
+        #sidebar {
+            background-color: var(--sidebar-color);
+            width: 20vw;
+            height: 100vh;
+            border-right: 2px solid var(--border-color);
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: center;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            /* TODO: Make the scrollbar appear only when scrolling */
+            scrollbar-width: none;
+        }
+
+        #sidebar-logo {
+            width: 75%;
+            margin-left: 20%;
+            margin-right: 20%;
+            margin-top: 20%;
+            border-radius: 20px;
+        }
+
+        #sidebar-name {
+            margin: 0;
+            margin-top: 10%;
+            font-size: 200%;
+            font-family: "BR Segma", sans-serif;
+            font-weight: 500;
+            color: var(--primary-text-color);
+        }
+
+        #sidebar-flavortext {
+            margin: 10%;
+            font-size: 100%;
+            font-family: "BR Segma", sans-serif;
+            font-weight: 500;
+            color: var(--secondary-text-color);
+        }
+
+        #sidebar-links-container {
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10%;
+        }
+
+        .sidebar-link,
+        .sidebar-image-link {
+            margin: 0;
+            color: var(--tertiary-text-color);
+        }
+
+        .sidebar-image-link > img {
+            width: 80%;
+            border-radius: 20px;
+        }
+
+        #content {
+            width: 80vw;
+            top: 0;
+            right: 0;
+        }
+
+        /* Rule for small screens */
+        @media (max-width: 600px) {
+
+            body {
+                flex-direction: column;
+            }
+
+            #sidebar {
+                width: 100vw;
+                height: 40vh;
+                top: 0;
+                left: 0;
+                border-right: none;
+                border-bottom: 2px solid #e188ff;
+                overflow: hidden;
+                scrollbar-width: auto;
+            }
+
+            #content {
+                width: 100vw;
+                height: 60vh;
+                bottom: 0;
+                left: 0;
+            }
+        }
+    </style>
+
+    <body>
+        <div id="sidebar">
+            <img id="sidebar-logo" src="assets/2ducks.jpg" alt="The Duck Blog Logo">
+            <p id="sidebar-name">The Duck Blog</p>
+            <p id="sidebar-flavortext">Welcome to my blog. It is all about ducks!</p>
+            <div id="sidebar-links-container">
+                <p class="sidebar-link">Here are my favorite links:</p>
+                <a href="https://noai.duckduckgo.com" class="sidebar-link" target="_blank">DuckDuckGo</a>
+                <a href="https://noai.duckduckgo.com/?q=ducks&ia=images&iax=images" class="sidebar-link" target="_blank">Ducks on DuckDuckGo</a>
+                <a href="https://noai.duckduckgo.com/?q=ducks%20diving&ia=images&iax=images" class="sidebar-link" target="_blank">Ducks Diving on DuckDuckGo</a>
+                <a href="https://noai.duckduckgo.com/?q=ducks%20quacking&noai=1&iar=images" class="sidebar-image-link" target="_blank"><img src="assets/duck.jpg" alt="Duck" title="Quack!"></a>
+                <a href="https://clipart-library.com/images/8izrGpXzT.jpg" target="_blank">This duck is reading a book. It's a very great book, or so I'm told.</a>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <a href="https://github.com/Meanbox12/verbena" class="sidebar-image-link" target="_blank"><img src="assets/sketchy-download.png" alt="Download button" title="Click here to download."></a>
+            </div>
+        </div>
+
+        <div id="content">
+
+            <div class="post">
+                <h1 class="post-title">Title</h1>
+                <small class="post-info">Posted on Neverary 4, 0000</small>
+                <p class="post-content">This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. This is a lot of text. </p>
+            </div>
+            
+        </div>
+    </body>
+</html>
