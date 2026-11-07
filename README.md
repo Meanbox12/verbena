@@ -1,2 +1,2 @@
 # verbena
-Blog software?
+Very simple blog software. WIP
