@@ -142,7 +142,8 @@
         border-radius: var(--corner-rounding);
     }
 
-    #content-page {
+    #content-page,
+    #post-page {
         width: var(--content-width);
     }
 
@@ -176,6 +177,8 @@
         font-family: var(--secondary-font);
     }
 
+    /* TODO: Fix images copying each other's aspect ratios */
+    /* TODO: Fix the image viewer on mobile devices */
     .post-image-container {
         display: flex;
         flex-direction: row;
@@ -188,6 +191,15 @@
         width: 25%;
         border-radius: var(--corner-rounding);
         cursor: pointer;
+    }
+
+    #post-page-inner {
+        padding: 40px;
+    }
+
+    #post-page-inner>.post-title {
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 10px;
     }
 
     #image-viewer {
@@ -221,7 +233,7 @@
 
     /* Rule for small screens */
     /* TODO: On mobile devices, show a modal where the user can see the title, logo, and flavortext and press "View links" or "View posts" */
-    @media (max-width: 1000px) {
+    @media (max-width: 1150px) {
 
         body {
             flex-direction: column;
@@ -257,9 +269,14 @@
             display: none;
         }
 
-        #content-page {
+        #content-page,
+        #post-page {
             width: 100vw;
             margin-bottom: 10%;
+        }
+
+        #post-image-container {
+            flex-direction: column;
         }
     }
 </style>
@@ -315,16 +332,16 @@
             </div>
         </div>
 
-        <div id="content-page" style="display: none;">
+        <div id="content-page">
+
+            <!-- TODO: Either split the content page into seperate pages and have a page number selector, or only load a certain amount of posts at a time -->
 
             <div class="post">
                 <span class="post-title">A fun fact about ducks <img class="post-link" src="assets/link.png"
                         alt="Copy link to post" title="Copy link to post"></span>
                 <p class="post-content">I wanted to share a fun facts about ducks I learned today. Did you know that
-                    ducks
-                    appear in ancient mythology? Folklore from Asia, Europe, and the Americas depicts them as tricksters
-                    or
-                    companions.</p>
+                    ducks appear in ancient mythology? Folklore from Asia, Europe, and the Americas depicts them as
+                    tricksters or companions.</p>
                 <small class="post-info">Posted on Neverary 4, 0000</small>
             </div>
 
@@ -360,6 +377,33 @@
                 <small class="post-info">Posted on Neverary 1, 0000</small>
             </div>
         </div>
+
+        <div id="post-page" style="display: none;">
+            <div id="post-page-inner">
+                <a class="post-info" id="post-page-return">
+                    <p>Return</p>
+                </a>
+                <h1 class="post-title">Post Title is a really long title that shows what the post is about. And when I
+                    say really long, I mean REALLY LONG. Like this long!</h1>
+                <p class="post-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
+                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation
+                    ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
+                    voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+                    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                <div class="post-image-container">
+                    <img class="post-image" src="assets/duck.jpg" alt="Duck" title="Quack!"
+                        onclick="document.getElementById('image-viewer').style.display = 'flex';">
+                    <img class="post-image" src="assets/verbena.jpg" alt="Verbena"
+                        title="Beautiful flowers."
+                        onclick="document.getElementById('image-viewer').style.display = 'flex';">
+                </div>
+                <small class="post-info">Posted on Neverary 5, 0000</small>
+                <br>
+                <span id="post-page-arrow-group" class="post-info">
+                    <a href="" id="post-page-previous">« Previous Post</a> | <a href="" id="post-page-next">Next Post »</a>
+                </span>
+            </div>
+        </div>
     </div>
 
     <div id="image-viewer" onclick="document.getElementById('image-viewer').style.display = 'none';"
@@ -369,5 +413,38 @@
         <small class="image-viewer-instructions">Click anywhere to close</small>
     </div>
 </body>
+
+<script>
+    const postPage = document.getElementById("post-page");
+    const contentPage = document.getElementById("content-page");
+
+    const title1 = contentPage.getElementsByClassName("post-title")[0];
+    const content1 = contentPage.getElementsByClassName("post-content")[0];
+    const info1 = contentPage.getElementsByClassName("post-info")[0];
+
+    const postPageReturn = document.getElementById("post-page-return");
+    const postPageTitle = postPage.getElementsByClassName("post-title")[0];
+    const postPageContent = postPage.getElementsByClassName("post-content")[0];
+    const postPageInfo = postPage.getElementsByClassName("post-info")[1];
+
+    title1.addEventListener("click", function () {
+        contentPage.style.display = "none";
+        postPage.style.display = "block";
+
+        postPageTitle.innerText = title1.innerText;
+        // Don't need to fix this bug because this isn't how the frontend is really going to work lol
+        postPageContent.innerText = content1.innerText;
+        postPageInfo.innerText = info1.innerText;
+
+        // TODO: Save the scroll position on the site to return the user to where they were if they click Return
+        window.scroll(0, 0);
+    });
+
+    postPageReturn.addEventListener("click", function () {
+        contentPage.style.display = "block";
+        postPage.style.display = "none";
+    });
+
+</script>
 
 </html>
