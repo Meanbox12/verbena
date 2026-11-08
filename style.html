@@ -13,13 +13,16 @@
 <style>
     :root {
         --background-color: #e1f7dc;
-        --sidebar-color: #ffffff;
+        --header-color: #ffffff;
+        --sidebar-color: #e1f7dc;
         --border-color: #163f12;
         --primary-text-color: #163f12;
         --secondary-text-color: #395a3b;
         --tertiary-text-color: #000000;
 
         --corner-rounding: 10px;
+        --sidebar-width: 15vw;
+        --content-width: 85vw;
 
         --primary-font: "BR Segma", sans-serif;
         --secondary-font: "Manjari", sans-serif;
@@ -30,12 +33,72 @@
         padding: 0;
         margin: 0;
         display: flex;
+        flex-direction: column;
+    }
+
+    #header {
+        height: 20vh;
+        background-color: white;
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 10px;
+        gap: 20px;
+        border-bottom: 2px solid var(--border-color);
+        background-color: var(--header-color);
+    }
+
+    #header-logo {
+        height: 20vh;
+        border-radius: var(--corner-rounding);
+    }
+
+    #header-text-group {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+        max-height: 100%;
+    }
+
+    #header-name {
+        margin: 0;
+        font-size: 200%;
+        font-family: var(--primary-font);
+        font-weight: 500;
+        color: var(--primary-text-color);
+    }
+
+    #header-flavortext {
+        margin: 0;
+        font-size: 100%;
+        font-family: var(--primary-font);
+        font-weight: 500;
+        color: var(--secondary-text-color);
+    }
+
+    #header-searchbar-group {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        right: 10%;
+    }
+
+    #header-searchbar,
+    #header-searchbar-label {
+        font-family: var(--secondary-font);
+        justify-self: end;
+        font-size: 125%;
+    }
+
+    #page {
+        display: flex;
         flex-direction: row;
     }
 
     #sidebar {
         background-color: var(--sidebar-color);
-        width: 20vw;
+        width: var(--sidebar-width);
         min-height: 100vh;
         border-right: 2px solid var(--border-color);
         top: 0;
@@ -45,33 +108,9 @@
         align-items: center;
         justify-content: flex-start;
         text-align: center;
+        padding: 20px;
         /* TODO: Make the scrollbar appear only when scrolling */
         scrollbar-width: none;
-    }
-
-    #sidebar-logo {
-        width: 75%;
-        margin-left: 20%;
-        margin-right: 20%;
-        margin-top: 20%;
-        border-radius: var(--corner-rounding);
-    }
-
-    #sidebar-name {
-        margin: 0;
-        margin-top: 10%;
-        font-size: 200%;
-        font-family: var(--primary-font);
-        font-weight: 500;
-        color: var(--primary-text-color);
-    }
-
-    #sidebar-flavortext {
-        margin: 10%;
-        font-size: 100%;
-        font-family: var(--primary-font);
-        font-weight: 500;
-        color: var(--secondary-text-color);
     }
 
     #sidebar-links-container {
@@ -103,9 +142,8 @@
         border-radius: var(--corner-rounding);
     }
 
-    #content {
-        width: 80vw;
-        margin-top: 5vh;
+    #content-page {
+        width: var(--content-width);
     }
 
     .post {
@@ -142,6 +180,7 @@
         display: flex;
         flex-direction: row;
         justify-content: space-evenly;
+        margin-bottom: 1%;
     }
 
     /* TODO: Show 2 images max and add a +(num) button for extras */
@@ -182,25 +221,43 @@
 
     /* Rule for small screens */
     /* TODO: On mobile devices, show a modal where the user can see the title, logo, and flavortext and press "View links" or "View posts" */
-    @media (max-width: 600px) {
+    @media (max-width: 1000px) {
 
         body {
             flex-direction: column;
         }
 
-        #sidebar {
-            min-height: 0;
-            width: 100vw;
-            max-height: 50vh;
-            border-right: none;
-            border-bottom: 2px solid var(--border-color);
-            overflow-y: scroll;
-            overflow-x: hidden;
-            scrollbar-width: auto;
-            flex: 0 0 50vh;
+        #header {
+            flex-direction: column;
+            height: 40vh;
+            justify-content: center;
+            align-items: center;
         }
 
-        #content {
+        #header-logo {
+            height: 20vh;
+        }
+
+        #header-text-group {
+            text-align: center;
+        }
+
+        #header-searchbar-group {
+            position: relative;
+            right: inherit;
+            align-items: center;
+        }
+
+        #header-searchbar {
+            width: 75%;
+        }
+
+        /* TODO: Add a button to toggle the sidebar on mobile */
+        #sidebar {
+            display: none;
+        }
+
+        #content-page {
             width: 100vw;
             margin-bottom: 10%;
         }
@@ -208,86 +265,101 @@
 </style>
 
 <body>
-    <div id="sidebar">
-        <img id="sidebar-logo" src="assets/2ducks.jpg" alt="The Duck Blog Logo">
-        <p id="sidebar-name">The Duck Blog</p>
-        <p id="sidebar-flavortext">Welcome to my blog. It is all about ducks!</p>
-        <div id="sidebar-links-container">
-            <p class="sidebar-heading">Here are my favorite links:</p>
-            <a href="https://noai.duckduckgo.com" class="sidebar-link" target="_blank">DuckDuckGo</a>
-            <a href="https://noai.duckduckgo.com/?q=ducks&ia=images&iax=images" class="sidebar-link"
-                target="_blank">Ducks on DuckDuckGo</a>
-            <a href="https://noai.duckduckgo.com/?q=ducks%20diving&ia=images&iax=images" class="sidebar-link"
-                target="_blank">Ducks Diving on DuckDuckGo</a>
-            <a href="https://noai.duckduckgo.com/?q=ducks%20quacking&noai=1&iar=images" class="sidebar-image-link"
-                target="_blank"><img src="assets/duck.jpg" alt="Duck" title="Quack!"></a>
-            <a href="https://clipart-library.com/images/8izrGpXzT.jpg" target="_blank" class="sidebar-link">This duck is
-                reading a book. It's
-                a very great book, or so I'm told.</a>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-heading">Empty link for space, but this one's big for some reason.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <p class="sidebar-link">Empty link for space.</p>
-            <a href="https://github.com/Meanbox12/verbena" class="sidebar-image-link" target="_blank"><img
-                    src="assets/sketchy-download.png" alt="Download button"
-                    title="Click here to learn about Verbena."></a>
+
+    <div id="header">
+        <img id="header-logo" src="assets/2ducks.jpg" alt="The Duck Blog Logo">
+        <div id="header-text-group">
+            <p id="header-name">The Duck Blog</p>
+            <p id="header-flavortext">Welcome to my blog. It is all about ducks!</p>
+        </div>
+        <div id="header-searchbar-group">
+            <label id="header-searchbar-label" for="header-searchbar">Search The Duck Blog</label>
+            <input id="header-searchbar" placeholder="Type something...">
         </div>
     </div>
 
-    <div id="content">
-
-        <div class="post">
-            <span class="post-title">A fun fact about ducks <img class="post-link" src="assets/link.png"
-                    alt="Copy link to post" title="Copy link to post"></span>
-            <p class="post-content">I wanted to share a fun facts about ducks I learned today. Did you know that ducks
-                appear in ancient mythology? Folklore from Asia, Europe, and the Americas depicts them as tricksters or
-                companions.</p>
-            <small class="post-info">Posted on Neverary 4, 0000</small>
-        </div>
-
-        <div class="post">
-            <span class="post-title">Ducks I saw today <img class="post-link" src="assets/link.png"
-                    alt="Copy link to post" title="Copy link to post"></span>
-            <p class="post-content">I was at the lake today and saw some ducks. I saw a Wood Duck and a Northern
-                Pintail.</p>
-            <div class="post-image-container">
-                <img class="post-image" src="assets/wood-duck.jpg" alt="Wood Duck" title="The Wood Duck that I saw."
-                    onclick="document.getElementById('image-viewer').style.display = 'flex';">
-                <img class="post-image" src="assets/northern-pintail.jpg" alt="Northern Pintail"
-                    title="The Northern Pintail that I saw."
-                    onclick="document.getElementById('image-viewer').style.display = 'flex';">
+    <div id="page">
+        <div id="sidebar">
+            <div id="sidebar-links-container">
+                <p class="sidebar-heading">Here are my favorite links:</p>
+                <a href="https://noai.duckduckgo.com" class="sidebar-link" target="_blank">DuckDuckGo</a>
+                <a href="https://noai.duckduckgo.com/?q=ducks&ia=images&iax=images" class="sidebar-link"
+                    target="_blank">Ducks on DuckDuckGo</a>
+                <a href="https://noai.duckduckgo.com/?q=ducks%20diving&ia=images&iax=images" class="sidebar-link"
+                    target="_blank">Ducks Diving on DuckDuckGo</a>
+                <a href="https://noai.duckduckgo.com/?q=ducks%20quacking&noai=1&iar=images" class="sidebar-image-link"
+                    target="_blank"><img src="assets/duck.jpg" alt="Duck" title="Quack!"></a>
+                <a href="https://clipart-library.com/images/8izrGpXzT.jpg" target="_blank" class="sidebar-link">This
+                    duck is
+                    reading a book. It's
+                    a very great book, or so I'm told.</a>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-heading">Empty link for space, but this one's big for some reason.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <p class="sidebar-link">Empty link for space.</p>
+                <a href="https://github.com/Meanbox12/verbena" class="sidebar-image-link" target="_blank"><img
+                        src="assets/sketchy-download.png" alt="Download button"
+                        title="Click here to learn about Verbena."></a>
             </div>
-            <small class="post-info">Posted on Neverary 3, 0000</small>
         </div>
 
-        <div class="post">
-            <span class="post-title">My favorite type of duck <img class="post-link" src="assets/link.png"
-                    alt="Copy link to post" title="Copy link to post"></span>
-            <p class="post-content">My favorite type of duck is the Mallard. I love how green they are. I even based my
-                blog's colors off of the Mallard.</p>
-            <small class="post-info">Posted on Neverary 2, 0000</small>
-        </div>
+        <div id="content-page" style="display: none;">
 
-        <div class="post">
-            <span class="post-title">Welcome to my blog! <img class="post-link" src="assets/link.png"
-                    alt="Copy link to post" title="Copy link to post"></span>
-            <p class="post-content">This is my blog that talks about ducks. I will post information about ducks and
-                photos of the ducks I see.</p>
-            <small class="post-info">Posted on Neverary 1, 0000</small>
-        </div>
+            <div class="post">
+                <span class="post-title">A fun fact about ducks <img class="post-link" src="assets/link.png"
+                        alt="Copy link to post" title="Copy link to post"></span>
+                <p class="post-content">I wanted to share a fun facts about ducks I learned today. Did you know that
+                    ducks
+                    appear in ancient mythology? Folklore from Asia, Europe, and the Americas depicts them as tricksters
+                    or
+                    companions.</p>
+                <small class="post-info">Posted on Neverary 4, 0000</small>
+            </div>
 
+            <div class="post">
+                <span class="post-title">Ducks I saw today <img class="post-link" src="assets/link.png"
+                        alt="Copy link to post" title="Copy link to post"></span>
+                <p class="post-content">I was at the lake today and saw some ducks. I saw a Wood Duck and a Northern
+                    Pintail.</p>
+                <div class="post-image-container">
+                    <img class="post-image" src="assets/wood-duck.jpg" alt="Wood Duck" title="The Wood Duck that I saw."
+                        onclick="document.getElementById('image-viewer').style.display = 'flex';">
+                    <img class="post-image" src="assets/northern-pintail.jpg" alt="Northern Pintail"
+                        title="The Northern Pintail that I saw."
+                        onclick="document.getElementById('image-viewer').style.display = 'flex';">
+                </div>
+                <small class="post-info">Posted on Neverary 3, 0000</small>
+            </div>
+
+            <div class="post">
+                <span class="post-title">My favorite type of duck <img class="post-link" src="assets/link.png"
+                        alt="Copy link to post" title="Copy link to post"></span>
+                <p class="post-content">My favorite type of duck is the Mallard. I love how green they are. I even based
+                    my
+                    blog's colors off of the Mallard.</p>
+                <small class="post-info">Posted on Neverary 2, 0000</small>
+            </div>
+
+            <div class="post">
+                <span class="post-title">Welcome to my blog! <img class="post-link" src="assets/link.png"
+                        alt="Copy link to post" title="Copy link to post"></span>
+                <p class="post-content">This is my blog that talks about ducks. I will post information about ducks and
+                    photos of the ducks I see.</p>
+                <small class="post-info">Posted on Neverary 1, 0000</small>
+            </div>
+        </div>
     </div>
 
     <div id="image-viewer" onclick="document.getElementById('image-viewer').style.display = 'none';"
