@@ -1,6 +1,9 @@
 const postPage = document.getElementById("post-page");
 const contentPage = document.getElementById("content-page");
 
+const headerTitle = document.getElementById("header-title");
+const headerSubtitle = document.getElementById("header-subtitle");
+
 const title1 = contentPage.getElementsByClassName("post-title")[0];
 const content1 = contentPage.getElementsByClassName("post-content")[0];
 const info1 = contentPage.getElementsByClassName("post-info")[0];
@@ -27,3 +30,17 @@ postPageReturn.addEventListener("click", function () {
     contentPage.style.display = "block";
     postPage.style.display = "none";
 });
+
+window.onload = async function () {
+    let info = await fetch("/info");
+    let infoData = await info.json();
+    headerTitle.innerText = infoData.title;
+    headerSubtitle.innerText = infoData.subtitle;
+
+
+    let word = await fetch("/posts/1");
+    let wordData = await word.json();
+    title1.innerText = wordData.title;
+    content1.innerText = wordData.content;
+    info1.innerText = wordData.created_at;
+};
