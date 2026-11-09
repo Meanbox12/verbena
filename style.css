@@ -1,0 +1,268 @@
+:root {
+    --background-color: #e5c7fc;
+    --header-color: #c19eff;
+    --sidebar-color: #e5c7fc;
+    --border-color: #7c55ba;
+    --primary-text-color: #000000;
+    --secondary-text-color: #000000;
+    --tertiary-text-color: #000000;
+
+    --corner-rounding: 10px;
+    --sidebar-width: 15vw;
+    --content-width: 85vw;
+
+    --primary-font: "BR Segma", sans-serif;
+    --secondary-font: "Manjari", sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#header {
+    height: 20vh;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 10px;
+    gap: 20px;
+    border-bottom: 2px solid var(--border-color);
+    background-color: var(--header-color);
+}
+
+#header-logo {
+    height: 20vh;
+    border-radius: var(--corner-rounding);
+}
+
+#header-text-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    max-height: 100%;
+}
+
+#header-name {
+    margin: 0;
+    font-size: 200%;
+    font-family: var(--primary-font);
+    font-weight: 500;
+    color: var(--primary-text-color);
+}
+
+#header-flavortext {
+    margin: 0;
+    font-size: 100%;
+    font-family: var(--primary-font);
+    font-weight: 500;
+    color: var(--secondary-text-color);
+}
+
+#header-searchbar-group {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    right: 10%;
+}
+
+#header-searchbar,
+#header-searchbar-label {
+    font-family: var(--secondary-font);
+    justify-self: end;
+    font-size: 125%;
+}
+
+#page {
+    display: flex;
+    flex-direction: row;
+}
+
+#sidebar {
+    background-color: var(--sidebar-color);
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    border-right: 2px solid var(--border-color);
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: 20px;
+    /* TODO: Make the scrollbar appear only when scrolling */
+    scrollbar-width: none;
+}
+
+#sidebar-links-container {
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10%;
+}
+
+.sidebar-link,
+.sidebar-image-link {
+    margin: 0;
+    color: var(--tertiary-text-color);
+    font-family: var(--secondary-font);
+}
+
+.sidebar-heading {
+    margin: 0;
+    color: var(--secondary-text-color);
+    font-family: "BR Segma", sans-serif;
+    font-weight: 500;
+    font-size: 125%;
+}
+
+.sidebar-image-link>img {
+    width: 80%;
+    border-radius: var(--corner-rounding);
+}
+
+#content-page,
+#post-page {
+    width: var(--content-width);
+}
+
+.post {
+    margin: 20px;
+    padding: 2vh;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.post-title {
+    font-family: var(--primary-font);
+    font-weight: 500;
+    color: var(--primary-text-color);
+    margin: 0;
+    font-size: 200%;
+}
+
+.post-link {
+    width: 20px;
+    cursor: pointer;
+}
+
+.post-info {
+    color: var(--secondary-text-color);
+    font-family: var(--secondary-font);
+}
+
+.post-content {
+    color: var(--tertiary-text-color);
+    font-size: 125%;
+    font-family: var(--secondary-font);
+}
+
+/* TODO: Fix images copying each other's aspect ratios */
+/* TODO: Fix the image viewer on mobile devices */
+.post-image-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    margin-bottom: 1%;
+}
+
+/* TODO: Show 2 images max and add a +(num) button for extras */
+.post-image {
+    width: 25%;
+    border-radius: var(--corner-rounding);
+    cursor: pointer;
+}
+
+#post-page-inner {
+    padding: 40px;
+}
+
+#post-page-inner>.post-title {
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+#image-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.95);
+}
+
+.image-viewer-text {
+    color: white;
+    font-family: var(--secondary-font);
+    font-size: 150%;
+}
+
+.image-viewer-instructions {
+    color: white;
+    font-family: var(--secondary-font);
+}
+
+.viewer-image {
+    height: 50%;
+}
+
+/* Rule for small screens */
+/* TODO: On mobile devices, show a modal where the user can see the title, logo, and flavortext and press "View links" or "View posts" */
+@media (max-width: 1150px) {
+
+    body {
+        flex-direction: column;
+    }
+
+    #header {
+        flex-direction: column;
+        height: 40vh;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #header-logo {
+        height: 20vh;
+    }
+
+    #header-text-group {
+        text-align: center;
+    }
+
+    #header-searchbar-group {
+        position: relative;
+        right: inherit;
+        align-items: center;
+    }
+
+    #header-searchbar {
+        width: 75%;
+    }
+
+    /* TODO: Add a button to toggle the sidebar on mobile */
+    #sidebar {
+        display: none;
+    }
+
+    #content-page,
+    #post-page {
+        width: 100vw;
+        margin-bottom: 10%;
+    }
+
+    #post-image-container {
+        flex-direction: column;
+    }
+}
