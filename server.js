@@ -1,10 +1,11 @@
 const express = require("express");
 const sqlite3 = require("sqlite3").verbose();
+const path = require("node:path");
 
 const app = express();
 const db = new sqlite3.Database("verbena.db");
 
-app.use(express.static(__dirname + "/public"));
+app.use(express.static(path.join(__dirname, "/public")));
 
 const createTable = `
 CREATE TABLE IF NOT EXISTS posts (
@@ -41,7 +42,13 @@ app.get("/api/post/:postid", (req, res, next) => {
             return console.log(err.message);
         }
 
-        res.json(row);
+        if (row) {
+            console.log("row does exist");
+            res.json(row);
+        } else {
+            console.log("row does not exist");
+            res.send("Invalid post.");
+        }
     });
 });
 
@@ -59,8 +66,12 @@ app.get("/api/info", (req, res, next) => {
     res.json({ "title": "Verbena", "subtitle": "Welcome to Verbena!" });
 });
 
+app.get("/post/:postid", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 app.get("/", (req, res) => {
-    res.sendFile(__dirname + "/public/index.html");
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 db.get("SELECT COUNT() FROM posts", (err, count) => {

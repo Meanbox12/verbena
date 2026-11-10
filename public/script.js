@@ -20,7 +20,6 @@ postPageReturn.addEventListener("click", function () {
 });
 
 function createPostElement(id, title, content, info) {
-    console.log(`Post element with title ${title}, content ${content}, info ${info}`);
 
     let postElement = document.createElement("div");
     postElement.className = "post"
@@ -45,20 +44,24 @@ function createPostElement(id, title, content, info) {
     postElement.appendChild(postElementInfo);
 
     postElementTitle.addEventListener("click", function () {
-        contentPage.style.display = "none";
-        postPage.style.display = "block";
-
-        postPageTitle.innerText = postElementTitle.innerText;
-        // Don't need to fix this bug because this isn't how the frontend is really going to work lol
-        postPageContent.innerText = postElementContent.innerText;
-        postPageInfo.innerText = postElementInfo.innerText;
-        postPageNumber.innerText = "#" + id;
-
-        // TODO: Save the scroll position on the site to return the user to where they were if they click Return
-        window.scroll(0, 0);    
+        showPostPage(id, title, content, info);;
     });
 
     return postElement;
+}
+
+function showPostPage(id, title, content, info) {
+    postPageTitle.innerText = title;
+    // Don't need to fix this bug because this isn't how the frontend is really going to work lol
+    postPageContent.innerText = content;
+    postPageInfo.innerText = info;
+    postPageNumber.innerText = "#" + id;
+
+    // TODO: Save the scroll position on the site to return the user to where they were if they click Return
+    window.scroll(0, 0);
+
+    contentPage.style.display = "none";
+    postPage.style.display = "block";
 }
 
 async function populatePosts(page) {
@@ -68,11 +71,41 @@ async function populatePosts(page) {
     for (let i = posts.length - 1; i >= 0; i--) {
         let postObject = posts[i];
         let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at);
-        console.log(postElement);
         contentPage.appendChild(postElement);
     }
 }
 
+async function getPost(id) {
+    let postRaw = await fetch("/api/post/" + id);
+
+    if (postRaw.type == "json") {
+
+        let post = await postRaw.json();
+        console.log(post);
+        return post;
+
+    } else if (postRaw.type == "basic") {
+
+        let post = await postRaw.text();
+        if (post = "Invalid post.") {
+            console.log("You have searched for an invalid post.");
+            showPostPage(404, "Invalid post.", "You have searched for an invalid post!", "Test");
+        }
+
+    }
+}
+
 window.onload = async function () {
+    if (window.location.href.includes("/post/")) {
+        console.log("You are on the posts page");
+        let params = window.location.href.split("/");
+        console.log(params[4]);
+        let postId = params[4];
+        let post = await getPost(postId);
+
+        if (post) {
+            showPostPage(postId, post.title, post.content, post.created_at);
+        }
+    }
     populatePosts();
 };
