@@ -13,6 +13,7 @@ const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
 
 let postViewId = 0;
+let totalPosts = 0;
 
 postPageReturn.addEventListener("click", function () {
     contentPage.style.display = "block";
@@ -80,9 +81,8 @@ postPagePrevious.addEventListener("click", async function () {
     }
 });
 
-postPageNext.addEventListener("click", async function() {
-    // TODO: Fix this
-    if (postViewId < 5) {
+postPageNext.addEventListener("click", async function () {
+    if (postViewId < totalPosts) {
         let post = await getPost(postViewId + 1);
         showPostPage(postViewId + 1, post.title, post.content, post.created_at);
         let object = { "page": "post", "id": postViewId };
@@ -137,6 +137,9 @@ async function getPost(id) {
 }
 
 window.onload = async function () {
+
+    totalPosts = await (await fetch("api/postcount")).text();
+
     if (window.location.href.includes("/post/")) {
         let params = window.location.href.split("/");
         let postId = params[4];

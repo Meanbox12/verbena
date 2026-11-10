@@ -22,7 +22,6 @@ db.run(createTable, (err) => {
     if (err) {
         return console.log("error: " + err.message);
     }
-    console.log("Created the table");
 });
 
 // My spot to run random SQL commands
@@ -57,6 +56,16 @@ app.get("/api/posts", (req, res) => {
         }
 
         res.json(content);
+    });
+});
+
+app.get("/api/postcount", (req, res) => {
+    db.get("SELECT COUNT() FROM posts", (err, count) => {
+        if (err) {
+            return console.log(err.message);
+        }
+
+        res.send(count["COUNT()"]);
     });
 });
 
