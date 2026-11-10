@@ -1,8 +1,10 @@
 const postPage = document.getElementById("post-page");
 const contentPage = document.getElementById("content-page");
+const sidebar = document.getElementById("sidebar-links-container");
 
 const headerTitle = document.getElementById("header-title");
 const headerSubtitle = document.getElementById("header-subtitle");
+const headerSearchbarLabel = document.getElementById("header-searchbar-label");
 
 const postPageReturn = document.getElementById("post-page-return");
 const postPageTitle = postPage.getElementsByClassName("post-title")[0];
@@ -48,7 +50,7 @@ function createPostElement(id, title, content, info) {
     postElement.appendChild(postElementInfo);
 
     postElementTitle.addEventListener("click", function () {
-        showPostPage(id, title, content, info);;
+        showPostPage(id, title, content, info);
         let object = { "page": "post", "id": id };
         window.history.pushState(object, "", "/post/" + id);
     });
@@ -69,13 +71,12 @@ function showPostPage(id, title, content, info) {
     contentPage.style.display = "none";
     postPage.style.display = "block";
 
-    postViewId = id;
+    postViewId = parseInt(id);
 }
 
 postPagePrevious.addEventListener("click", async function () {
     if (postViewId > 1) {
-        let post = await getPost(postViewId - 1);
-        showPostPage(postViewId - 1, post.title, post.content, post.created_at);
+        await getPost(postViewId - 1, true);
         let object = { "page": "post", "id": postViewId };
         window.history.pushState(object, "", "/post/" + postViewId);
     }
@@ -83,8 +84,7 @@ postPagePrevious.addEventListener("click", async function () {
 
 postPageNext.addEventListener("click", async function () {
     if (postViewId < totalPosts) {
-        let post = await getPost(postViewId + 1);
-        showPostPage(postViewId + 1, post.title, post.content, post.created_at);
+        await getPost(postViewId + 1, true);
         let object = { "page": "post", "id": postViewId };
         window.history.pushState(object, "", "/post/" + postViewId);
     }
@@ -101,8 +101,7 @@ onpopstate = async function (event) {
         contentPage.style.display = "block";
         postPage.style.display = "none";
     } else if (event.state.page == "post") {
-        let post = await getPost(event.state.id);
-        showPostPage(event.state.id, post.title, post.content, post.created_at);
+        await getPost(event.state.id, true);
     }
 }
 
@@ -117,8 +116,8 @@ async function populatePosts(page) {
     }
 }
 
-// TODO: Make a different version of this function that returns something that can be directly passed to showPostPage
-async function getPost(id) {
+// TODO: Add the state setting as another option for this
+async function getPost(id, show) {
     let postRaw = await fetch("/api/post/" + id);
 
     let type = postRaw.headers.get("content-type");
@@ -126,6 +125,9 @@ async function getPost(id) {
     if (type.includes("application/json")) {
 
         let post = await postRaw.json();
+        if (show) {
+            await showPostPage(id, post.title, post.content, post.created_at);
+        }
         return post;
 
     } else if (type.includes("text/html")) {
@@ -136,9 +138,23 @@ async function getPost(id) {
     }
 }
 
+async function populateHeader() {
+    let headerPost = await (await fetch("/api/post/-2")).json();
+
+    headerTitle.innerHTML = headerPost.title;
+    headerSubtitle.innerHTML = headerPost.content;
+    headerSearchbarLabel.innerHTML = "Search " + headerPost.title;
+}
+
+async function populateSidebar() {
+    let sidebarPost = await (await fetch("/api/post/-1")).json();
+
+    sidebar.innerHTML = sidebarPost.content;
+}
+
 window.onload = async function () {
 
-    totalPosts = await (await fetch("api/postcount")).text();
+    totalPosts = parseInt(await (await fetch("/api/postcount")).text());
 
     if (window.location.href.includes("/post/")) {
         let params = window.location.href.split("/");
@@ -151,5 +167,10 @@ window.onload = async function () {
             window.history.pushState(object, "", "/post/" + postId);
         }
     }
+
+    populateHeader();
+
+    populateSidebar();
+
     populatePosts();
 };

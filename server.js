@@ -50,7 +50,7 @@ app.get("/api/post/:postid", (req, res, next) => {
 });
 
 app.get("/api/posts", (req, res) => {
-    db.all("SELECT * FROM posts", (err, content) => {
+    db.all("SELECT * FROM posts WHERE type = 1", (err, content) => {
         if (err) {
             return console.log(err.message);
         }
@@ -60,7 +60,7 @@ app.get("/api/posts", (req, res) => {
 });
 
 app.get("/api/postcount", (req, res) => {
-    db.get("SELECT COUNT() FROM posts", (err, count) => {
+    db.get("SELECT COUNT() FROM posts WHERE type = 1", (err, count) => {
         if (err) {
             return console.log(err.message);
         }
@@ -81,7 +81,7 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-db.get("SELECT COUNT() FROM posts", (err, count) => {
+db.get("SELECT COUNT() FROM posts WHERE type = 1", (err, count) => {
     if (err) {
         return console.log(err.message);
     }
