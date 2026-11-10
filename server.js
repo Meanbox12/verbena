@@ -35,7 +35,7 @@ if (randomCommand != "") {
     });
 }
 
-app.get("/posts/:postid", (req, res, next) => {
+app.get("/api/post/:postid", (req, res, next) => {
     db.get("SELECT title, content, created_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
         if (err) {
             return console.log(err.message);
@@ -45,7 +45,17 @@ app.get("/posts/:postid", (req, res, next) => {
     });
 });
 
-app.get("/info", (req, res, next) => {
+app.get("/api/posts", (req, res) => {
+    db.all("SELECT * FROM posts", (err, content) => {
+        if (err) {
+            return console.log(err.message);
+        }
+
+        res.json(content);
+    });
+});
+
+app.get("/api/info", (req, res, next) => {
     res.json({ "title": "Verbena", "subtitle": "Welcome to Verbena!" });
 });
 

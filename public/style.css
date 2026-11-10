@@ -86,7 +86,7 @@ body {
 #sidebar {
     background-color: var(--sidebar-color);
     width: var(--sidebar-width);
-    min-height: 100vh;
+    min-height: 80vh;
     border-right: 2px solid var(--border-color);
     top: 0;
     left: 0;
@@ -146,6 +146,11 @@ body {
     font-size: 200%;
 }
 
+.post > .post-title {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 .post-link {
     width: 20px;
     cursor: pointer;
@@ -176,6 +181,11 @@ body {
     width: 25%;
     border-radius: var(--corner-rounding);
     cursor: pointer;
+}
+
+#post-page-return {
+    cursor: pointer;
+    text-decoration: underline;
 }
 
 #post-page-inner {
