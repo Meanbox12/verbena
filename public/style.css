@@ -197,6 +197,12 @@ body {
     padding-bottom: 10px;
 }
 
+#post-page-next,
+#post-page-previous {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 #image-viewer {
     position: fixed;
     top: 0;

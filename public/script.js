@@ -4,15 +4,13 @@ const contentPage = document.getElementById("content-page");
 const headerTitle = document.getElementById("header-title");
 const headerSubtitle = document.getElementById("header-subtitle");
 
-const title1 = contentPage.getElementsByClassName("post-title")[0];
-const content1 = contentPage.getElementsByClassName("post-content")[0];
-const info1 = contentPage.getElementsByClassName("post-info")[0];
-
 const postPageReturn = document.getElementById("post-page-return");
 const postPageTitle = postPage.getElementsByClassName("post-title")[0];
 const postPageContent = postPage.getElementsByClassName("post-content")[0];
 const postPageInfo = postPage.getElementsByClassName("post-info")[1];
 const postPageNumber = document.getElementById("post-page-number");
+const postPagePrevious = document.getElementById("post-page-previous");
+const postPageNext = document.getElementById("post-page-next");
 
 let postViewId = 0;
 
@@ -73,6 +71,25 @@ function showPostPage(id, title, content, info) {
     postViewId = id;
 }
 
+postPagePrevious.addEventListener("click", async function () {
+    if (postViewId > 1) {
+        let post = await getPost(postViewId - 1);
+        showPostPage(postViewId - 1, post.title, post.content, post.created_at);
+        let object = { "page": "post", "id": postViewId };
+        window.history.pushState(object, "", "/post/" + postViewId);
+    }
+});
+
+postPageNext.addEventListener("click", async function() {
+    // TODO: Fix this
+    if (postViewId < 5) {
+        let post = await getPost(postViewId + 1);
+        showPostPage(postViewId + 1, post.title, post.content, post.created_at);
+        let object = { "page": "post", "id": postViewId };
+        window.history.pushState(object, "", "/post/" + postViewId);
+    }
+});
+
 onpopstate = async function (event) {
 
     if (event.state == null) {
@@ -100,6 +117,7 @@ async function populatePosts(page) {
     }
 }
 
+// TODO: Make a different version of this function that returns something that can be directly passed to showPostPage
 async function getPost(id) {
     let postRaw = await fetch("/api/post/" + id);
 
