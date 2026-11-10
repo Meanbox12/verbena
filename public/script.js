@@ -14,9 +14,14 @@ const postPageContent = postPage.getElementsByClassName("post-content")[0];
 const postPageInfo = postPage.getElementsByClassName("post-info")[1];
 const postPageNumber = document.getElementById("post-page-number");
 
+let postViewId = 0;
+
 postPageReturn.addEventListener("click", function () {
     contentPage.style.display = "block";
     postPage.style.display = "none";
+
+    let object = { "page": "content" }
+    window.history.pushState(object, "", "/");
 });
 
 function createPostElement(id, title, content, info) {
@@ -45,6 +50,8 @@ function createPostElement(id, title, content, info) {
 
     postElementTitle.addEventListener("click", function () {
         showPostPage(id, title, content, info);;
+        let object = { "page": "post", "id": id };
+        window.history.pushState(object, "", "/post/" + id);
     });
 
     return postElement;
@@ -62,6 +69,24 @@ function showPostPage(id, title, content, info) {
 
     contentPage.style.display = "none";
     postPage.style.display = "block";
+
+    postViewId = id;
+}
+
+onpopstate = async function (event) {
+
+    if (event.state == null) {
+        contentPage.style.display = "block";
+        postPage.style.display = "none";
+    }
+
+    if (event.state.page == "content") {
+        contentPage.style.display = "block";
+        postPage.style.display = "none";
+    } else if (event.state.page == "post") {
+        let post = await getPost(event.state.id);
+        showPostPage(event.state.id, post.title, post.content, post.created_at);
+    }
 }
 
 async function populatePosts(page) {
@@ -78,33 +103,31 @@ async function populatePosts(page) {
 async function getPost(id) {
     let postRaw = await fetch("/api/post/" + id);
 
-    if (postRaw.type == "json") {
+    let type = postRaw.headers.get("content-type");
+
+    if (type.includes("application/json")) {
 
         let post = await postRaw.json();
-        console.log(post);
         return post;
 
-    } else if (postRaw.type == "basic") {
+    } else if (type.includes("text/html")) {
 
-        let post = await postRaw.text();
-        if (post = "Invalid post.") {
-            console.log("You have searched for an invalid post.");
-            showPostPage(404, "Invalid post.", "You have searched for an invalid post!", "Test");
+        if (await postRaw.text() == "Invalid post.") {
+            return { "id": 404, "title": "Invalid post.", "content": "You have searched for an invalid post!", "created_at": "Test" };
         }
-
     }
 }
 
 window.onload = async function () {
     if (window.location.href.includes("/post/")) {
-        console.log("You are on the posts page");
         let params = window.location.href.split("/");
-        console.log(params[4]);
         let postId = params[4];
         let post = await getPost(postId);
 
         if (post) {
             showPostPage(postId, post.title, post.content, post.created_at);
+            let object = { "page": "post", "id": postId };
+            window.history.pushState(object, "", "/post/" + postId);
         }
     }
     populatePosts();

@@ -43,10 +43,8 @@ app.get("/api/post/:postid", (req, res, next) => {
         }
 
         if (row) {
-            console.log("row does exist");
             res.json(row);
         } else {
-            console.log("row does not exist");
             res.send("Invalid post.");
         }
     });
