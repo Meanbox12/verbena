@@ -23,89 +23,160 @@ const editPageSave = document.getElementById("edit-page-save");
 let postViewId = 0;
 let totalPosts = 0;
 
-postPageReturn.addEventListener("click", function () {
-    contentPage.style.display = "block";
-    postPage.style.display = "none";
+let contentPagePopulated = false;
 
-    let object = { "page": "content" }
-    window.history.pushState(object, "", "/");
+/**
+ * Shows a page in the content area of the site.
+ * @param {Number} page The page to be shown. 1 = Content, 2 = Post, 3 = Edit
+ * @param {JSON} data A JSON object containing additional data about how the page should be shown.
+ */
+async function showPage(page, data) {
+
+    /**
+     * Hides all pages in the content area.
+     */
+    function hideAllPages() {
+        contentPage.style.display = "none";
+        postPage.style.display = "none";
+        editPage.style.display = "none";
+    }
+
+    /**
+     * Populates the Post page with a post.
+     * @param {Number} id The post's ID.
+     * @param {String} title The post's title.
+     * @param {String} content The post's content.
+     * @param {String} info The post's info.
+     */
+    function populatePostPage(id, title, content, info) {
+        postPageTitle.innerText = title;
+        postPageContent.innerText = content;
+        postPageInfo.innerText = info;
+        postPageNumber.innerText = "#" + id;
+        postViewId = parseInt(id);
+    }
+
+    /**
+     * Populates the Content page with post elements.
+     * @param {Number} page [Currently unused] The page to load posts from.
+     */
+    async function populateContentPage(page) {
+
+        /**
+         * Creates a Element for a post.
+         * @param {Number} id The post's ID.
+         * @param {String} title The post's title.
+         * @param {String} content The post's content.
+         * @param {String} info The post's info.
+         * @returns {Element} The created HTML element.
+         */
+        function createPostElement(id, title, content, info) {
+            let postElement = document.createElement("div");
+            postElement.className = "post"
+            postElement.id = "post-" + id;
+
+            let postElementTitle = document.createElement("a");
+            postElementTitle.className = "large-text";
+            postElementTitle.innerText = title;
+            postElementTitle.tabIndex = 0;
+            postElement.appendChild(postElementTitle);
+
+            let postElementContent = document.createElement("p");
+            postElementContent.className = "normal-text";
+            postElementContent.innerText = content;
+            postElement.appendChild(postElementContent);
+
+            // TODO: Add the image viewer
+
+            let postElementInfo = document.createElement("small");
+            postElementInfo.className = "small-text";
+            postElementInfo.innerText = info;
+            postElement.appendChild(postElementInfo);
+
+            postElementTitle.addEventListener("click", function () {
+                showPage(2, { populate: true, history: true, post: { id: id, title: title, content: content, created_at: info } });
+            });
+
+            return postElement;
+        }
+
+        
+        let postsRaw = await fetch("/api/posts");
+        let posts = await postsRaw.json();
+
+        for (let i = posts.length - 1; i >= 0; i--) {
+            let postObject = posts[i];
+            let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at);
+            contentPage.appendChild(postElement);
+        }
+    }
+
+    // Content Page
+    if (page == 1) {
+        hideAllPages();
+        if (data && data.populate) {
+            await populateContentPage();
+            contentPagePopulated = true;
+        }
+        contentPage.style.display = "block";
+
+        if (data && data.history) {
+            let object = { "page": 1 }
+            window.history.pushState(object, "", "/");
+        }
+    }
+
+    // Post Page
+    else if (page == 2) {
+        hideAllPages();
+        if (data && data.populate) {
+            await populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at);
+        }
+
+        postPage.style.display = "block";
+        // TODO: Save the scroll position on the site to return the user to where they were if they go back
+        window.scroll(0, 0);
+
+        if (data.history) {
+            let object = { "page": 2, "id": data.post.id };
+            window.history.pushState(object, "", "/post/" + data.post.id);
+        }
+    }
+
+    // Edit Page
+    else if (page == 3) {
+        hideAllPages();
+        editPage.style.display = "block";
+
+        if (data && data.history) {
+            let object = { "page": 3 }
+            window.history.pushState(object, "", "/edit");
+        }
+    }
+
+}
+
+postPageReturn.addEventListener("click", function () {
+    showPage(1, { history: true, populate: !contentPagePopulated });
 });
 
 editPageReturn.addEventListener("click", function () {
-    contentPage.style.display = "block";
-    editPage.style.display = "none";
-
-    let object = { "page": "edit" }
-    window.history.pushState(object, "", "/");
+    showPage(1, { history: true, populate: !contentPagePopulated });
 });
-
-function createPostElement(id, title, content, info) {
-
-    let postElement = document.createElement("div");
-    postElement.className = "post"
-    postElement.id = "post-" + id;
-
-    let postElementTitle = document.createElement("a");
-    postElementTitle.className = "large-text";
-    postElementTitle.innerText = title;
-    postElementTitle.tabIndex = 0;
-    postElement.appendChild(postElementTitle);
-
-    let postElementContent = document.createElement("p");
-    postElementContent.className = "normal-text";
-    postElementContent.innerText = content;
-    postElement.appendChild(postElementContent);
-
-    // TODO: Add the image viewer
-
-    let postElementInfo = document.createElement("small");
-    postElementInfo.className = "small-text";
-    postElementInfo.innerText = info;
-    postElement.appendChild(postElementInfo);
-
-    postElementTitle.addEventListener("click", function () {
-        showPostPage(id, title, content, info);
-        let object = { "page": "post", "id": id };
-        window.history.pushState(object, "", "/post/" + id);
-    });
-
-    return postElement;
-}
-
-function showPostPage(id, title, content, info) {
-    postPageTitle.innerText = title;
-    // Don't need to fix this bug because this isn't how the frontend is really going to work lol
-    postPageContent.innerText = content;
-    postPageInfo.innerText = info;
-    postPageNumber.innerText = "#" + id;
-
-    // TODO: Save the scroll position on the site to return the user to where they were if they click Return
-    window.scroll(0, 0);
-
-    contentPage.style.display = "none";
-    postPage.style.display = "block";
-
-    postViewId = parseInt(id);
-}
 
 postPagePrevious.addEventListener("click", async function () {
     if (postViewId > 1) {
-        await getPost(postViewId - 1, true);
-        let object = { "page": "post", "id": postViewId };
-        window.history.pushState(object, "", "/post/" + postViewId);
+        showPage(2, { populate: true, history: true, post: await getPost(postViewId - 1) });
     }
 });
 
 postPageNext.addEventListener("click", async function () {
     if (postViewId < totalPosts) {
-        await getPost(postViewId + 1, true);
-        let object = { "page": "post", "id": postViewId };
-        window.history.pushState(object, "", "/post/" + postViewId);
+        showPage(2, { populate: true, history: true, post: await getPost(postViewId + 1) });
     }
 });
 
 editPageSave.addEventListener("click", async function () {
-
     let response = await fetch("/api/create", {
         method: "POST",
         headers: {
@@ -114,64 +185,47 @@ editPageSave.addEventListener("click", async function () {
         body: JSON.stringify({ "title": editPageTitle.value, "content": editPageContent.value }),
     });
 
-    
+    // TODO: Do something with the response
 });
 
+// When the browser forward and back buttons are pressed
 onpopstate = async function (event) {
-
-    /*
-    if (event.state == null) {
-        contentPage.style.display = "block";
-        postPage.style.display = "none";
-    }
-        */
-
-    if (event.state.page == "content") {
-        contentPage.style.display = "block";
-        postPage.style.display = "none";
-        editPage.style.display = "none";
-    } else if (event.state.page == "post") {
-        await getPost(event.state.id, true);
-    } else if (event.state.page == "edit") {
-        contentPage.style.display = "none";
-        editPage.style.display = "block";
-        postPage.style.display = "none";
-    }
-}
-
-async function populatePosts(page) {
-    let postsRaw = await fetch("/api/posts");
-    let posts = await postsRaw.json();
-
-    for (let i = posts.length - 1; i >= 0; i--) {
-        let postObject = posts[i];
-        let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at);
-        contentPage.appendChild(postElement);
+    if (event.state.page == 1) {
+        showPage(1);
+    } else if (event.state.page == 2) {
+        showPage(2, { populate: true, post: await getPost(event.state.id) });
+    } else if (event.state.page == 3) {
+        showPage(3);
     }
 }
 
 // TODO: Add the state setting as another option for this
-async function getPost(id, show) {
+
+/**
+ * Fetches a post's info from the server.
+ * @param {Number} id The post ID to be fetched.
+ * @returns {JSON} A JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
+ */
+async function getPost(id) {
     let postRaw = await fetch("/api/post/" + id);
 
     let type = postRaw.headers.get("content-type");
 
     if (type.includes("application/json")) {
-
         let post = await postRaw.json();
-        if (show) {
-            await showPostPage(id, post.title, post.content, post.created_at);
-        }
         return post;
 
+        // TODO: Show an actual error message
     } else if (type.includes("text/html")) {
-
         if (await postRaw.text() == "Invalid post.") {
-            return { "id": 404, "title": "Invalid post.", "content": "You have searched for an invalid post!", "created_at": "Test" };
+            return { "id": 404, "title": "Invalid post.", "content": "You have searched for an invalid post!", "created_at": "N/A" };
         }
     }
 }
 
+/**
+ * Populates the site's header.
+ */
 async function populateHeader() {
     let headerPost = await (await fetch("/api/post/-2")).json();
 
@@ -180,6 +234,9 @@ async function populateHeader() {
     headerSearchbarLabel.innerHTML = "Search " + headerPost.title;
 }
 
+/**
+ * Populates the site's sidebar.
+ */
 async function populateSidebar() {
     let sidebarPost = await (await fetch("/api/post/-1")).json();
 
@@ -190,30 +247,27 @@ window.onload = async function () {
 
     totalPosts = parseInt(await (await fetch("/api/postcount")).text());
 
-    if (window.location.href.includes("/post/")) {
-        let params = window.location.href.split("/");
-        let postId = params[4];
+    let pathnameArray = window.location.pathname.split("/");
+    if (pathnameArray[pathnameArray.length - 1] == "") {
+        pathnameArray.pop();
+    }
+
+    let pathnamePage = pathnameArray[1];
+
+    if (pathnamePage == "post") {
+        let postId = pathnameArray[2];
         let post = await getPost(postId);
 
         if (post) {
-            showPostPage(postId, post.title, post.content, post.created_at);
-            let object = { "page": "post", "id": postId };
-            window.history.pushState(object, "", "/post/" + postId);
+            showPage(2, { populate: true, history: true, post: { id: postId, title: post.title, content: post.content, created_at: post.created_at } });
         }
-    } else if (window.location.href.includes("/edit")) {
-        contentPage.style.display = "none";
-        editPage.style.display = "block";
-        let object = { "page": "edit" }
-        window.history.pushState(object, "", "/edit");
+    } else if (pathnamePage == "edit") {
+        showPage(3, { history: true });
     } else {
-        contentPage.style.display = "block";
-        let object = { "page": "content" }
-        window.history.pushState(object, "", "/");
+        showPage(1, { history: true, populate: true });
     }
 
     populateHeader();
 
     populateSidebar();
-
-    populatePosts();
 };

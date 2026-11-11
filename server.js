@@ -54,7 +54,7 @@ app.post("/api/create", (req, res) => {
 });
 
 app.get("/api/post/:postid", (req, res, next) => {
-    db.get("SELECT title, content, created_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
+    db.get("SELECT id, title, content, created_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
         if (err) {
             return console.log(err.message);
         }
