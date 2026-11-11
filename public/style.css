@@ -138,7 +138,7 @@ body {
     border-bottom: 2px solid var(--border-color);
 }
 
-.post-title {
+.large-text {
     font-family: var(--primary-font);
     font-weight: 500;
     color: var(--primary-text-color);
@@ -146,7 +146,7 @@ body {
     font-size: 200%;
 }
 
-.post > .post-title {
+.post > .large-text {
     cursor: pointer;
     text-decoration: underline;
 }
@@ -156,12 +156,12 @@ body {
     cursor: pointer;
 }
 
-.post-info {
+.small-text {
     color: var(--secondary-text-color);
     font-family: var(--secondary-font);
 }
 
-.post-content {
+.normal-text {
     color: var(--tertiary-text-color);
     font-size: 125%;
     font-family: var(--secondary-font);
@@ -188,11 +188,12 @@ body {
     text-decoration: underline;
 }
 
-#post-page-inner {
+#post-page-inner,
+#create-page-inner {
     padding: 40px;
 }
 
-#post-page-inner>.post-title {
+#post-page-title {
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 10px;
 }

@@ -7,9 +7,9 @@ const headerSubtitle = document.getElementById("header-subtitle");
 const headerSearchbarLabel = document.getElementById("header-searchbar-label");
 
 const postPageReturn = document.getElementById("post-page-return");
-const postPageTitle = postPage.getElementsByClassName("post-title")[0];
-const postPageContent = postPage.getElementsByClassName("post-content")[0];
-const postPageInfo = postPage.getElementsByClassName("post-info")[1];
+const postPageTitle = document.getElementById("post-page-title");
+const postPageContent = document.getElementById("post-page-content");
+const postPageInfo = document.getElementById("post-page-info");
 const postPageNumber = document.getElementById("post-page-number");
 const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
@@ -32,20 +32,20 @@ function createPostElement(id, title, content, info) {
     postElement.id = "post-" + id;
 
     let postElementTitle = document.createElement("a");
-    postElementTitle.className = "post-title";
+    postElementTitle.className = "large-text";
     postElementTitle.innerText = title;
     postElementTitle.tabIndex = 0;
     postElement.appendChild(postElementTitle);
 
     let postElementContent = document.createElement("p");
-    postElementContent.className = "post-content";
+    postElementContent.className = "normal-text";
     postElementContent.innerText = content;
     postElement.appendChild(postElementContent);
 
     // TODO: Add the image viewer
 
     let postElementInfo = document.createElement("small");
-    postElementInfo.className = "post-info";
+    postElementInfo.className = "small-text";
     postElementInfo.innerText = info;
     postElement.appendChild(postElementInfo);
 
