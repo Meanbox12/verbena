@@ -1,5 +1,6 @@
 const postPage = document.getElementById("post-page");
 const contentPage = document.getElementById("content-page");
+const editPage = document.getElementById("edit-page");
 const sidebar = document.getElementById("sidebar-links-container");
 
 const headerTitle = document.getElementById("header-title");
@@ -14,6 +15,11 @@ const postPageNumber = document.getElementById("post-page-number");
 const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
 
+const editPageReturn = document.getElementById("edit-page-return");
+const editPageTitle = document.getElementById("edit-page-title");
+const editPageContent = document.getElementById("edit-page-content");
+const editPageSave = document.getElementById("edit-page-save");
+
 let postViewId = 0;
 let totalPosts = 0;
 
@@ -22,6 +28,14 @@ postPageReturn.addEventListener("click", function () {
     postPage.style.display = "none";
 
     let object = { "page": "content" }
+    window.history.pushState(object, "", "/");
+});
+
+editPageReturn.addEventListener("click", function () {
+    contentPage.style.display = "block";
+    editPage.style.display = "none";
+
+    let object = { "page": "edit" }
     window.history.pushState(object, "", "/");
 });
 
@@ -90,18 +104,38 @@ postPageNext.addEventListener("click", async function () {
     }
 });
 
+editPageSave.addEventListener("click", async function () {
+
+    let response = await fetch("/api/create", {
+        method: "POST",
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify({ "title": editPageTitle.value, "content": editPageContent.value }),
+    });
+
+    
+});
+
 onpopstate = async function (event) {
 
+    /*
     if (event.state == null) {
         contentPage.style.display = "block";
         postPage.style.display = "none";
     }
+        */
 
     if (event.state.page == "content") {
         contentPage.style.display = "block";
         postPage.style.display = "none";
+        editPage.style.display = "none";
     } else if (event.state.page == "post") {
         await getPost(event.state.id, true);
+    } else if (event.state.page == "edit") {
+        contentPage.style.display = "none";
+        editPage.style.display = "block";
+        postPage.style.display = "none";
     }
 }
 
@@ -166,6 +200,15 @@ window.onload = async function () {
             let object = { "page": "post", "id": postId };
             window.history.pushState(object, "", "/post/" + postId);
         }
+    } else if (window.location.href.includes("/edit")) {
+        contentPage.style.display = "none";
+        editPage.style.display = "block";
+        let object = { "page": "edit" }
+        window.history.pushState(object, "", "/edit");
+    } else {
+        contentPage.style.display = "block";
+        let object = { "page": "content" }
+        window.history.pushState(object, "", "/");
     }
 
     populateHeader();

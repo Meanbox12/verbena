@@ -6,6 +6,7 @@ const app = express();
 const db = new sqlite3.Database("verbena.db");
 
 app.use(express.static(path.join(__dirname, "/public")));
+app.use(express.json());
 
 const createTable = `
 CREATE TABLE IF NOT EXISTS posts (
@@ -34,6 +35,23 @@ if (randomCommand != "") {
         console.log("Did the thing");
     });
 }
+
+app.post("/api/create", (req, res) => {
+
+    console.log(req);
+
+    console.log(req.body);
+
+    let title = req.body.title;
+    let content = req.body.content;
+    let time = new Date();
+
+    db.run(`INSERT INTO posts (type, title, content, created_at, modified_at) VALUES (1, "${title}", "${content}", "${time.toLocaleString()}", "${time.toLocaleString()}"   )`, (err, row) => {
+        if (err) {
+            return console.log(err.message);
+        }
+    });
+});
 
 app.get("/api/post/:postid", (req, res, next) => {
     db.get("SELECT title, content, created_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
@@ -74,6 +92,10 @@ app.get("/api/info", (req, res, next) => {
 });
 
 app.get("/post/:postid", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+app.get("/edit", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 

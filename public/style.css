@@ -183,13 +183,13 @@ body {
     cursor: pointer;
 }
 
-#post-page-return {
+#post-page-return,
+#edit-page-return {
     cursor: pointer;
     text-decoration: underline;
 }
 
-#post-page-inner,
-#create-page-inner {
+.page-inner {
     padding: 40px;
 }
 

@@ -31,14 +31,14 @@
             <div id="sidebar-links-container"></div>
         </div>
 
-        <div id="content-page">
+        <div id="content-page" style="display: none;">
 
             <!-- TODO: Either split the content page into seperate pages and have a page number selector, or only load a certain amount of posts at a time -->
 
         </div>
 
         <div id="post-page" style="display: none;">
-            <div id="post-page-inner">
+            <div class="page-inner" id="post-page-inner">
                 <a class="small-text" id="post-page-return">
                     <p>Return</p>
                 </a>
@@ -58,6 +58,30 @@
                     <a id="post-page-previous">« Previous Post</a> | <a id="post-page-number">Post Number</a> | <a
                         id="post-page-next">Next Post »</a>
                 </p>
+            </div>
+        </div>
+
+        <div id="edit-page" style="display: none;">
+            <div class="page-inner" id="edit-page-inner">
+                <a class="small-text" id="edit-page-return">
+                    <p>Return</p>
+                </a>
+                
+                <h1 class="large-text">Post Creator</h1>
+
+                <label class="normal-text" for="edit-page-title">Title</label>
+                <br>
+                <input id="edit-page-title">
+                <br>
+
+                <label class="normal-text" for="edit-page-content">Content</label>
+                <br>
+                <textarea id="edit-page-content"></textarea>
+                <br>
+
+                <button id="edit-page-save">Create Post</button>
+
+                <p id="edit-page-notice">...</p>
             </div>
         </div>
     </div>
