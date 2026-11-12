@@ -127,14 +127,22 @@ body {
     border-radius: var(--corner-rounding);
 }
 
-#content-page,
-#post-page {
+#content {
     width: var(--content-width);
 }
 
+#list-page {
+    margin-top: 20px;
+}
+
 .post {
+    margin-bottom: 2vh;
+    padding: 20px;
+    padding-left: 0;
+    /*
     margin: 20px;
     padding: 2vh;
+    */
     border-bottom: 2px solid var(--border-color);
 }
 
@@ -190,7 +198,7 @@ body {
 }
 
 .page-inner {
-    padding: 40px;
+    margin: 40px;
 }
 
 #post-page-title {
@@ -271,8 +279,7 @@ body {
         display: none;
     }
 
-    #content-page,
-    #post-page {
+    #content {
         width: 100vw;
         margin-bottom: 10%;
     }

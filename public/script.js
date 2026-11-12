@@ -1,5 +1,5 @@
 const postPage = document.getElementById("post-page");
-const contentPage = document.getElementById("content-page");
+const listPage = document.getElementById("list-page");
 const editPage = document.getElementById("edit-page");
 const sidebar = document.getElementById("sidebar-links-container");
 
@@ -23,11 +23,11 @@ const editPageSave = document.getElementById("edit-page-save");
 let postViewId = 0;
 let totalPosts = 0;
 
-let contentPagePopulated = false;
+let listPagePopulated = false;
 
 /**
  * Shows a page in the content area of the site.
- * @param {Number} page The page to be shown. 1 = Content, 2 = Post, 3 = Edit
+ * @param {Number} page The page to be shown. 1 = List, 2 = Post, 3 = Edit
  * @param {JSON} data A JSON object containing additional data about how the page should be shown.
  */
 async function showPage(page, data) {
@@ -36,7 +36,7 @@ async function showPage(page, data) {
      * Hides all pages in the content area.
      */
     function hideAllPages() {
-        contentPage.style.display = "none";
+        listPage.style.display = "none";
         postPage.style.display = "none";
         editPage.style.display = "none";
     }
@@ -57,10 +57,10 @@ async function showPage(page, data) {
     }
 
     /**
-     * Populates the Content page with post elements.
+     * Populates the List page with post elements.
      * @param {Number} page [Currently unused] The page to load posts from.
      */
-    async function populateContentPage(page) {
+    async function populateListPage(page) {
 
         /**
          * Creates a Element for a post.
@@ -107,18 +107,18 @@ async function showPage(page, data) {
         for (let i = posts.length - 1; i >= 0; i--) {
             let postObject = posts[i];
             let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at);
-            contentPage.appendChild(postElement);
+            listPage.appendChild(postElement);
         }
     }
 
-    // Content Page
+    // List Page
     if (page == 1) {
         hideAllPages();
         if (data && data.populate) {
-            await populateContentPage();
-            contentPagePopulated = true;
+            await populateListPage();
+            listPagePopulated = true;
         }
-        contentPage.style.display = "block";
+        listPage.style.display = "block";
 
         if (data && data.history) {
             let object = { "page": 1 }
@@ -157,11 +157,11 @@ async function showPage(page, data) {
 }
 
 postPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !contentPagePopulated });
+    showPage(1, { history: true, populate: !listPagePopulated });
 });
 
 editPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !contentPagePopulated });
+    showPage(1, { history: true, populate: !listPagePopulated });
 });
 
 postPagePrevious.addEventListener("click", async function () {

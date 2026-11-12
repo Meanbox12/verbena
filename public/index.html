@@ -31,27 +31,25 @@
             <div id="sidebar-links-container"></div>
         </div>
 
-        <!-- TODO: Make a content area and rename content-page -->
+        <div id="content">
+            <div id="list-page" class="page-inner" style="display: none;">
 
-        <div id="content-page" style="display: none;">
+                <!-- TODO: Either split the content page into seperate pages and have a page number selector, or only load a certain amount of posts at a time -->
 
-            <!-- TODO: Either split the content page into seperate pages and have a page number selector, or only load a certain amount of posts at a time -->
+            </div>
 
-        </div>
-
-        <div id="post-page" style="display: none;">
-            <div class="page-inner" id="post-page-inner">
+            <div id="post-page" class="page-inner" style="display: none;">
                 <a class="small-text" id="post-page-return">
                     <p>Return</p>
                 </a>
                 <h1 class="large-text" id="post-page-title">Post Title</h1>
                 <p class="normal-text" id="post-page-content">Post Content</p>
                 <!--
-                <div class="post-image-container">
+                    <div class="post-image-container">
                     <img class="post-image" src="/assets/duck.jpg" alt="Alt Text" title="Alt Text">
                     <img class="post-image" src="/assets/placeholder.png" alt="Alt Text" title="Alt Text">
-                </div>
-                -->
+                    </div>
+                    -->
                 <small class="small-text" id="post-page-info">Post Info</small>
                 <br>
 
@@ -61,14 +59,12 @@
                         id="post-page-next">Next Post »</a>
                 </p>
             </div>
-        </div>
 
-        <div id="edit-page" style="display: none;">
-            <div class="page-inner" id="edit-page-inner">
+            <div id="edit-page" class="page-inner" style="display: none;">
                 <a class="small-text" id="edit-page-return">
                     <p>Return</p>
                 </a>
-                
+
                 <h1 class="large-text">Post Creator</h1>
 
                 <label class="normal-text" for="edit-page-title">Title</label>
