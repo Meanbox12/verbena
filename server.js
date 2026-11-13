@@ -58,9 +58,9 @@ if (randomCommand != "") {
     });
 }
 
-async function createPost(type, title, content) {
+function createPost(type, title, content) {
 
-    let time = new Date().toLocaleString();
+    let time = Date.now();
 
     return new Promise((resolve, reject) => {
         db.get(`INSERT INTO posts (type, title, content, created_at, modified_at) VALUES (?, ?, ?, ?, ?) RETURNING *`, [type, title, content, time, time], async (err, row) => {

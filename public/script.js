@@ -52,7 +52,8 @@ async function showPage(page, data) {
     function populatePostPage(id, title, content, info) {
         postPageTitle.innerText = title;
         postPageContent.innerText = content;
-        postPageInfo.innerText = info;
+        let date = new Date(info).toLocaleString();
+        postPageInfo.innerText = (date == "Invalid Date" ? info : date);
         postPageNumber.innerText = "#" + id;
         postViewId = parseInt(id);
     }
@@ -90,8 +91,9 @@ async function showPage(page, data) {
             // TODO: Add the image viewer
 
             let postElementInfo = document.createElement("small");
-            postElementInfo.className = "small-text";
-            postElementInfo.innerText = info;
+            postElementInfo.className = "small-text"; 
+            let date = new Date(Math.round(info)).toLocaleString();
+            postElementInfo.innerText = (date == "Invalid Date" ? info : date);
             postElement.appendChild(postElementInfo);
 
             postElementTitle.addEventListener("click", function () {
