@@ -19,6 +19,7 @@ const editPageReturn = document.getElementById("edit-page-return");
 const editPageTitle = document.getElementById("edit-page-title");
 const editPageContent = document.getElementById("edit-page-content");
 const editPageSave = document.getElementById("edit-page-save");
+const editPageNotice = document.getElementById("edit-page-notice");
 
 let postViewId = 0;
 let totalPosts = 0;
@@ -100,7 +101,7 @@ async function showPage(page, data) {
             return postElement;
         }
 
-        
+
         let postsRaw = await fetch("/api/posts");
         let posts = await postsRaw.json();
 
@@ -182,10 +183,15 @@ editPageSave.addEventListener("click", async function () {
         headers: {
             "Content-type": "application/json"
         },
-        body: JSON.stringify({ "title": editPageTitle.value, "content": editPageContent.value }),
+        body: JSON.stringify({ "type": 1, "title": editPageTitle.value, "content": editPageContent.value }),
     });
 
-    // TODO: Do something with the response
+    if (response && response != false) {
+        //let text = await 
+        editPageNotice.innerText = "New post created with ID " + await response.text();
+    } else {
+        editPageNotice.innerText = "An error occured when creating the post.";
+    }
 });
 
 // When the browser forward and back buttons are pressed

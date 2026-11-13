@@ -3,27 +3,49 @@ const sqlite3 = require("sqlite3").verbose();
 const path = require("node:path");
 
 const app = express();
-const db = new sqlite3.Database("verbena.db");
+let db;
 
 app.use(express.static(path.join(__dirname, "/public")));
 app.use(express.json());
 
-const createTable = `
-CREATE TABLE IF NOT EXISTS posts (
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-type INTEGER NOT NULL,
-title TEXT NOT NULL,
-content TEXT NOT NULL,
-created_at TEXT NOT NULL,
-modified_at TEXT NOT NULL
-)
-`
+async function loadDatabase(fileName) {
+    db = await new sqlite3.Database(fileName);
 
-db.run(createTable, (err) => {
-    if (err) {
-        return console.log("error: " + err.message);
-    }
-});
+    return createDB();
+}
+
+function createDB() {
+    const createTable1 = `
+    CREATE TABLE IF NOT EXISTS posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    modified_at TEXT NOT NULL
+    )
+    `
+    const createTable2 = `
+    CREATE TABLE IF NOT EXISTS info (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    content TEXT NOT NULL
+    )
+    `
+
+    db.run(createTable1, (err) => {
+        if (err) {
+            return err;
+        }
+    });
+
+    db.run(createTable2, (err) => {
+        if (err) {
+            return err;
+        }
+    });
+
+    return true;
+}
 
 // My spot to run random SQL commands
 const randomCommand = "";
@@ -36,21 +58,34 @@ if (randomCommand != "") {
     });
 }
 
-app.post("/api/create", (req, res) => {
+async function createPost(type, title, content) {
 
-    console.log(req);
+    let time = new Date().toLocaleString();
 
-    console.log(req.body);
+    return new Promise((resolve, reject) => {
+        db.get(`INSERT INTO posts (type, title, content, created_at, modified_at) VALUES (?, ?, ?, ?, ?) RETURNING *`, [type, title, content, time, time], async (err, row) => {
+            if (err) {
+                reject(err);
+            }
 
-    let title = req.body.title;
-    let content = req.body.content;
-    let time = new Date();
-
-    db.run(`INSERT INTO posts (type, title, content, created_at, modified_at) VALUES (1, "${title}", "${content}", "${time.toLocaleString()}", "${time.toLocaleString()}"   )`, (err, row) => {
-        if (err) {
-            return console.log(err.message);
-        }
+            resolve(row);
+        });
     });
+}
+
+// TODO: Write this function
+function modifyPost(id, type, title, content) {
+
+}
+
+app.post("/api/create", async (req, res) => {
+    try {
+        let createdPost = await createPost(req.body.type, req.body.title, req.body.content);
+        res.send(createdPost.id);
+    } catch (err) {
+        res.send(false);
+        console.log(err.message);
+    }
 });
 
 app.get("/api/post/:postid", (req, res, next) => {
@@ -103,14 +138,15 @@ app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-db.get("SELECT COUNT() FROM posts WHERE type = 1", (err, count) => {
-    if (err) {
-        return console.log(err.message);
+app.listen(4000, async function () {
+
+    let dbStatus = await loadDatabase("verbena.db");
+
+    if (dbStatus) {
+        console.log("Databases were successfully loaded.");
+    } else {
+        console.log("An error occured when loading databases: " + dbStatus.message);
+        return;
     }
-
-    console.log(`Post Count: ${count["COUNT()"]}`);
-});
-
-app.listen(4000, () => {
     console.log(`Server is online at 127.0.0.1:4000`);
 });
