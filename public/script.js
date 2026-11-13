@@ -52,7 +52,7 @@ async function showPage(page, data) {
     function populatePostPage(id, title, content, info) {
         postPageTitle.innerText = title;
         postPageContent.innerText = content;
-        let date = new Date(info).toLocaleString();
+        let date = new Date(Math.round(info)).toLocaleString();
         postPageInfo.innerText = (date == "Invalid Date" ? info : date);
         postPageNumber.innerText = "#" + id;
         postViewId = parseInt(id);
