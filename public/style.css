@@ -12,7 +12,9 @@
     --content-width: 85vw;
 
     --primary-font: "BR Segma", sans-serif;
+    --primary-font-weight: 500;
     --secondary-font: "Manjari", sans-serif;
+    --secondary-font-weight: 500;
 }
 
 body {
@@ -52,7 +54,7 @@ body {
     margin: 0;
     font-size: 200%;
     font-family: var(--primary-font);
-    font-weight: 500;
+    font-weight: var(--primary-font-weight);
     color: var(--primary-text-color);
 }
 
@@ -60,7 +62,7 @@ body {
     margin: 0;
     font-size: 100%;
     font-family: var(--primary-font);
-    font-weight: 500;
+    font-weight: var(--primary-font-weight);
     color: var(--secondary-text-color);
 }
 
@@ -117,8 +119,8 @@ body {
 .sidebar-heading {
     margin: 0;
     color: var(--secondary-text-color);
-    font-family: "BR Segma", sans-serif;
-    font-weight: 500;
+    font-family: var(--secondary-font);
+    font-weight: var(--secondary-font-weight);
     font-size: 125%;
 }
 
@@ -148,7 +150,7 @@ body {
 
 .large-text {
     font-family: var(--primary-font);
-    font-weight: 500;
+    font-weight: var(--primary-font-weight);
     color: var(--primary-text-color);
     margin: 0;
     font-size: 200%;
@@ -161,6 +163,13 @@ body {
 
 .post-link {
     width: 20px;
+    cursor: pointer;
+}
+
+.text-button {
+    padding: 10px;
+    border-radius: var(--corner-rounding);
+    border: 2px solid var(--border-color);
     cursor: pointer;
 }
 
@@ -197,19 +206,53 @@ body {
     text-decoration: underline;
 }
 
-.page-inner {
+.page {
     margin: 40px;
 }
 
-#post-page-title {
+.page-title {
     border-bottom: 2px solid var(--border-color);
     padding-bottom: 10px;
 }
 
-#post-page-next,
-#post-page-previous {
+.link-text {
     cursor: pointer;
     text-decoration: underline;
+}
+
+#edit-page {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+}
+
+#edit-page-left > label,
+#edit-page-right > label {
+    display: block;
+    margin-top: 20px;
+}
+
+#edit-page-title-input {
+    width: 100%;
+}
+
+#edit-page-left > button {
+    display: block;
+    margin-top: 20px;
+}
+
+#edit-page-left,
+#edit-page-right {
+    width: 40%;
+}
+
+label {
+    display: block;
+}
+
+#edit-page-content-input {
+    width: 100%;
+    height: 25vh;
 }
 
 #image-viewer {

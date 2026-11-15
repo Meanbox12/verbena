@@ -3,6 +3,7 @@ const listPage = document.getElementById("list-page");
 const editPage = document.getElementById("edit-page");
 const sidebar = document.getElementById("sidebar-links-container");
 
+const headerLogoLink = document.getElementById("header-logo-link");
 const headerTitle = document.getElementById("header-title");
 const headerSubtitle = document.getElementById("header-subtitle");
 const headerSearchbarLabel = document.getElementById("header-searchbar-label");
@@ -14,10 +15,13 @@ const postPageInfo = document.getElementById("post-page-info");
 const postPageNumber = document.getElementById("post-page-number");
 const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
+const postPageDelete = document.getElementById("post-page-delete");
 
-const editPageReturn = document.getElementById("edit-page-return");
 const editPageTitle = document.getElementById("edit-page-title");
-const editPageContent = document.getElementById("edit-page-content");
+const editPageReturn = document.getElementById("edit-page-return");
+const editPageIdInput = document.getElementById("edit-page-id-input");
+const editPageTitleInput = document.getElementById("edit-page-title-input");
+const editPageContentInput = document.getElementById("edit-page-content-input");
 const editPageSave = document.getElementById("edit-page-save");
 const editPageNotice = document.getElementById("edit-page-notice");
 
@@ -25,6 +29,8 @@ let postViewId = 0;
 let totalPosts = 0;
 
 let listPagePopulated = false;
+
+// Functions
 
 /**
  * Shows a page in the content area of the site.
@@ -91,7 +97,7 @@ async function showPage(page, data) {
             // TODO: Add the image viewer
 
             let postElementInfo = document.createElement("small");
-            postElementInfo.className = "small-text"; 
+            postElementInfo.className = "small-text";
             let date = new Date(Math.round(info)).toLocaleString();
             postElementInfo.innerText = (date == "Invalid Date" ? info : date);
             postElement.appendChild(postElementInfo);
@@ -149,7 +155,7 @@ async function showPage(page, data) {
     // Edit Page
     else if (page == 3) {
         hideAllPages();
-        editPage.style.display = "block";
+        editPage.style.display = "flex";
 
         if (data && data.history) {
             let object = { "page": 3 }
@@ -157,54 +163,6 @@ async function showPage(page, data) {
         }
     }
 
-}
-
-postPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !listPagePopulated });
-});
-
-editPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !listPagePopulated });
-});
-
-postPagePrevious.addEventListener("click", async function () {
-    if (postViewId > 1) {
-        showPage(2, { populate: true, history: true, post: await getPost(postViewId - 1) });
-    }
-});
-
-postPageNext.addEventListener("click", async function () {
-    if (postViewId < totalPosts) {
-        showPage(2, { populate: true, history: true, post: await getPost(postViewId + 1) });
-    }
-});
-
-editPageSave.addEventListener("click", async function () {
-    let response = await fetch("/api/create", {
-        method: "POST",
-        headers: {
-            "Content-type": "application/json"
-        },
-        body: JSON.stringify({ "type": 1, "title": editPageTitle.value, "content": editPageContent.value }),
-    });
-
-    if (response && response != false) {
-        //let text = await 
-        editPageNotice.innerText = "New post created with ID " + await response.text();
-    } else {
-        editPageNotice.innerText = "An error occured when creating the post.";
-    }
-});
-
-// When the browser forward and back buttons are pressed
-onpopstate = async function (event) {
-    if (event.state.page == 1) {
-        showPage(1);
-    } else if (event.state.page == 2) {
-        showPage(2, { populate: true, post: await getPost(event.state.id) });
-    } else if (event.state.page == 3) {
-        showPage(3);
-    }
 }
 
 // TODO: Add the state setting as another option for this
@@ -232,6 +190,14 @@ async function getPost(id) {
 }
 
 /**
+ * Gets the current post count from the server.
+ * @returns {Number} The number of posts.
+ */
+async function getPostCount() {
+    return parseInt(await (await fetch("/api/postcount")).text());
+}
+
+/**
  * Populates the site's header.
  */
 async function populateHeader() {
@@ -249,6 +215,105 @@ async function populateSidebar() {
     let sidebarPost = await (await fetch("/api/post/-1")).json();
 
     sidebar.innerHTML = sidebarPost.content;
+}
+
+// Event Listeners
+
+headerLogoLink.addEventListener("click", function () {
+    showPage(1, { history: true, populate: true });
+});
+
+postPageReturn.addEventListener("click", function () {
+    showPage(1, { history: true, populate: !listPagePopulated });
+});
+
+editPageReturn.addEventListener("click", function () {
+    showPage(1, { history: true, populate: !listPagePopulated });
+});
+
+postPagePrevious.addEventListener("click", async function () {
+    if (postViewId > 1) {
+        showPage(2, { populate: true, history: true, post: await getPost(postViewId - 1) });
+    }
+});
+
+postPageNext.addEventListener("click", async function () {
+    if (postViewId < totalPosts) {
+        showPage(2, { populate: true, history: true, post: await getPost(postViewId + 1) });
+    }
+});
+
+// TODO: Add a confirmatioN!!!!
+postPageDelete.addEventListener("click", async function () {
+
+    alert("The delete button is disabled for now.")
+    return;
+
+    response = await fetch("/api/delete/" + postViewId, {
+        method: "DELETE"
+    });
+
+    if (response) {
+
+        let responseText = await response.text();
+
+        if (responseText != "false") {
+            alert(`Deleted post ${postViewId}`);
+            totalPosts = await getPostCount();
+        } else {
+            editPageNotice.innerText = "An error occured when creating the post.";
+        }
+    } else {
+        editPageNotice.innerText = "An error occured when creating the post.";
+    }
+});
+
+editPageSave.addEventListener("click", async function () {
+
+    let response;
+
+    if (editPageIdInput.value != "" && editPageIdInput.value <= totalPosts) {
+        response = await fetch("/api/edit/" + editPageIdInput.value, {
+            method: "PUT",
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: JSON.stringify({ "id": editPageIdInput.value, "type": 1, "title": editPageTitleInput.value, "content": editPageContentInput.value }),
+        });
+    } else {
+        response = await fetch("/api/create", {
+            method: "POST",
+            headers: {
+                "Content-type": "application/json"
+            },
+            body: JSON.stringify({ "type": 1, "title": editPageTitleInput.value, "content": editPageContentInput.value }),
+        });
+    }
+
+    if (response) {
+
+        let responseText = await response.text();
+
+        if (responseText != "false") {
+            editPageNotice.innerText = `New post created with ID ${responseText}.`;
+            totalPosts = await getPostCount();
+        } else {
+            editPageNotice.innerText = "An error occured when creating the post.";
+        }
+    } else {
+        editPageNotice.innerText = "An error occured when creating the post.";
+    }
+});
+
+// When the browser forward and back buttons are pressed
+onpopstate = async function (event) {
+    if (event.state.page == 1) {
+        showPage(1);
+    } else if (event.state.page == 2) {
+        showPage(2, { populate: true, post: await getPost(event.state.id) });
+    } else if (event.state.page == 3) {
+        showPage(3);
+    }
 }
 
 window.onload = async function () {

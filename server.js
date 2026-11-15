@@ -108,10 +108,50 @@ function modifyPost(id, type, title, content) {
     });
 }
 
+// TODO: Fix this to update other post IDs
+/**
+ * Deletes a post from the database.
+ * @param {Number} id The post ID to be deleted.
+ * @returns {Promise} A Promise that will either resolve to the deleted post or an error message if the delete fails.
+ */
+function deletePost(id) {
+    return new Promise((resolve, reject) => {
+        db.get("DELETE FROM posts WHERE id = ? RETURNING *", [id], (err, row) => {
+            if (err) {
+                reject(err);
+            }
+
+            db.run("REINDEX posts");
+
+            resolve(row);
+        });
+    });
+}
+
 app.post("/api/create", async (req, res) => {
     try {
         let createdPost = await createPost(req.body.type, req.body.title, req.body.content);
         res.send(createdPost.id);
+    } catch (err) {
+        res.send(false);
+        console.log(err.message);
+    }
+});
+
+app.put("/api/edit/:postid", async (req, res) => {
+    try {
+        let editedPost = await modifyPost(req.body.id, req.body.type, req.body.title, req.body.content);
+        res.send(editedPost.id);
+    } catch (err) {
+        res.send(false);
+        console.log(err.message);
+    }
+});
+
+app.delete("/api/delete/:postid", async (req, res) => {
+    try {
+        let deletedPost = await deletePost(req.params.postid);
+        res.send(deletedPost.id);
     } catch (err) {
         res.send(false);
         console.log(err.message);
