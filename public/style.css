@@ -3,9 +3,6 @@
     --header-color: #c19eff;
     --sidebar-color: #e5c7fc;
     --border-color: #7c55ba;
-    --primary-text-color: #000000;
-    --secondary-text-color: #000000;
-    --tertiary-text-color: #000000;
 
     --corner-rounding: 10px;
     --sidebar-width: 15vw;
@@ -13,8 +10,23 @@
 
     --primary-font: "BR Segma", sans-serif;
     --primary-font-weight: 500;
+    --primary-font-size: 35px;
+    --primary-font-color: #000000;
+    
     --secondary-font: "Manjari", sans-serif;
     --secondary-font-weight: 500;
+    --secondary-font-size: 20px;
+    --secondary-font-color: #000000;
+
+    --tertiary-font: "Manjari", sans-serif;
+    --tertiary-font-weight: 500;
+    --tertiary-font-size: 14px;
+    --tertiary-font-color: #000000;
+
+    --code-font: "Red Hat Mono", monospace;
+    --code-font-weight: 300;
+    --code-font-size: 18px;
+    --code-font-color: #303030;
 }
 
 body {
@@ -52,18 +64,18 @@ body {
 
 #header-title {
     margin: 0;
-    font-size: 200%;
+    font-size: var(--primary-font-size);
     font-family: var(--primary-font);
     font-weight: var(--primary-font-weight);
-    color: var(--primary-text-color);
+    color: var(--primary-font-color);
 }
 
 #header-subtitle {
     margin: 0;
-    font-size: 100%;
+    font-size: var(--secondary-font-size);
     font-family: var(--primary-font);
     font-weight: var(--primary-font-weight);
-    color: var(--secondary-text-color);
+    color: var(--secondary-font-color);
 }
 
 #header-searchbar-group {
@@ -76,8 +88,9 @@ body {
 #header-searchbar,
 #header-searchbar-label {
     font-family: var(--secondary-font);
+    font-weight: var(--secondary-font-weight);
+    font-size: var(--secondary-font-size);
     justify-self: end;
-    font-size: 125%;
 }
 
 #page {
@@ -112,16 +125,16 @@ body {
 .sidebar-link,
 .sidebar-image-link {
     margin: 0;
-    color: var(--tertiary-text-color);
+    color: var(--tertiary-font-color);
     font-family: var(--secondary-font);
 }
 
 .sidebar-heading {
     margin: 0;
-    color: var(--secondary-text-color);
+    color: var(--secondary-font-color);
     font-family: var(--secondary-font);
     font-weight: var(--secondary-font-weight);
-    font-size: 125%;
+    font-size: var(--primary-font-size);
 }
 
 .sidebar-image-link>img {
@@ -151,9 +164,9 @@ body {
 .large-text {
     font-family: var(--primary-font);
     font-weight: var(--primary-font-weight);
-    color: var(--primary-text-color);
+    color: var(--primary-font-color);
     margin: 0;
-    font-size: 200%;
+    font-size: var(--primary-font-size);
 }
 
 .post > .large-text {
@@ -174,13 +187,15 @@ body {
 }
 
 .small-text {
-    color: var(--secondary-text-color);
-    font-family: var(--secondary-font);
+    font-family: var(--tertiary-font);
+    font-weight: var(--tertiary-font-weight);
+    font-size: var(--tertiary-font-size);
+    color: var(--tertiary-font-color);
 }
 
 .normal-text {
-    color: var(--tertiary-text-color);
-    font-size: 125%;
+    color: var(--secondary-font-color);
+    font-size: var(--secondary-font-size);
     font-family: var(--secondary-font);
 }
 
@@ -255,6 +270,55 @@ label {
     height: 25vh;
 }
 
+/* Default */
+.post-markdown-container {
+    font-family: var(--secondary-font);
+    font-weight: var(--secondary-font-weight);
+    font-size: var(--secondary-font-size);
+    color: var(--secondary-font-color);
+}
+
+.post-markdown-container > p {
+    font-family: var(--secondary-font);
+    font-weight: var(--secondary-font-weight);
+    font-size: var(--secondary-font-size);
+    color: var(--secondary-font-color);
+}
+
+.post-markdown-container > hr {
+    color: var(--border-color);
+}
+
+.post-markdown-container > blockquote {
+    border-left: 6px solid gray;
+}
+
+.post-markdown-container > blockquote > p {
+    padding-left: 6px;
+    font-family: var(--secondary-font);
+    font-weight: var(--secondary-font-weight);
+    font-size: var(--secondary-font-size);
+    color: var(--secondary-font-color);
+}
+
+.post-markdown-container > pre > code {
+    font-family: var(--code-font);
+    font-weight: var(--code-font-weight);
+    font-size: var(--code-font-size);
+    color: var(--code-font-color);
+}
+
+.post-markdown-container > h1,
+.post-markdown-container > h2,
+.post-markdown-container > h3,
+.post-markdown-container > h4,
+.post-markdown-container > h5,
+.post-markdown-container > h6 {
+    font-family: var(--primary-font);
+    font-weight: var(--primary-font-weight);
+    color: var(--primary-font-color);
+}
+
 #image-viewer {
     position: fixed;
     top: 0;
@@ -272,12 +336,14 @@ label {
 .image-viewer-text {
     color: white;
     font-family: var(--secondary-font);
-    font-size: 150%;
+    font-weight: var(--secondary-font-weight);
+    font-size: var(--primary-font-size);
 }
 
 .image-viewer-instructions {
     color: white;
     font-family: var(--secondary-font);
+    font-weight: var(--secondary-font-weight);
 }
 
 .viewer-image {

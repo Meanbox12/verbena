@@ -15,6 +15,7 @@ const postPageInfo = document.getElementById("post-page-info");
 const postPageNumber = document.getElementById("post-page-number");
 const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
+const postPageRaw = document.getElementById("post-page-raw");
 const postPageDelete = document.getElementById("post-page-delete");
 
 const editPageTitle = document.getElementById("edit-page-title");
@@ -24,13 +25,35 @@ const editPageTitleInput = document.getElementById("edit-page-title-input");
 const editPageContentInput = document.getElementById("edit-page-content-input");
 const editPageSave = document.getElementById("edit-page-save");
 const editPageNotice = document.getElementById("edit-page-notice");
+const editPagePreviewTitle = document.getElementById("edit-page-preview-title");
+const editPagePreview = document.getElementById("edit-page-preview");
 
 let postViewId = 0;
 let totalPosts = 0;
 
+let faithfulMarkdown = false;
 let listPagePopulated = false;
 
 // Functions
+
+/**
+ * Parses a markdown string using the Marked library.
+ * @param {String} markdown The string to be parsed.
+ * @returns The parsed string as HTML.
+ */
+function parseMarkdown(markdown) {
+
+    let editedMarkdown;
+
+    if (faithfulMarkdown) {
+        editedMarkdown = markdown;
+    } else {
+        // Faithful markdown follows the markdown syntax exactly, but turning it off makes newlines work properly
+        editedMarkdown = markdown.replaceAll("\n", "  \n");
+    }
+
+    return marked.parse(editedMarkdown);
+}
 
 /**
  * Shows a page in the content area of the site.
@@ -57,7 +80,7 @@ async function showPage(page, data) {
      */
     function populatePostPage(id, title, content, info) {
         postPageTitle.innerText = title;
-        postPageContent.innerText = content;
+        postPageContent.innerHTML = parseMarkdown(content);
         let date = new Date(Math.round(info)).toLocaleString();
         postPageInfo.innerText = (date == "Invalid Date" ? info : date);
         postPageNumber.innerText = "#" + id;
@@ -90,8 +113,8 @@ async function showPage(page, data) {
             postElement.appendChild(postElementTitle);
 
             let postElementContent = document.createElement("p");
-            postElementContent.className = "normal-text";
-            postElementContent.innerText = content;
+            postElementContent.className = "post-markdown-container";
+            postElementContent.innerHTML = parseMarkdown(content);
             postElement.appendChild(postElementContent);
 
             // TODO: Add the image viewer
@@ -156,6 +179,14 @@ async function showPage(page, data) {
     else if (page == 3) {
         hideAllPages();
         editPage.style.display = "flex";
+        // TODO: Call this somewhere else
+        if (editPageTitleInput.value != "") {
+            editPagePreviewTitle.innerText = editPageTitleInput.value;
+        }
+
+        if (editPageContentInput.value != "") {
+            editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
+        }
 
         if (data && data.history) {
             let object = { "page": 3 }
@@ -227,10 +258,6 @@ postPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
 });
 
-editPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !listPagePopulated });
-});
-
 postPagePrevious.addEventListener("click", async function () {
     if (postViewId > 1) {
         showPage(2, { populate: true, history: true, post: await getPost(postViewId - 1) });
@@ -241,6 +268,28 @@ postPageNext.addEventListener("click", async function () {
     if (postViewId < totalPosts) {
         showPage(2, { populate: true, history: true, post: await getPost(postViewId + 1) });
     }
+});
+
+postPageRaw.addEventListener("click", async function () {
+    if (postPageRaw.innerText == "View Raw") {
+        postPageContent.innerText = (await getPost(postViewId)).content;
+        postPageRaw.innerText = "View Formatted";
+    } else {
+        postPageContent.innerHTML = parseMarkdown((await getPost(postViewId)).content);
+        postPageRaw.innerText = "View Raw";
+    }
+});
+
+editPageReturn.addEventListener("click", function () {
+    showPage(1, { history: true, populate: !listPagePopulated });
+});
+
+editPageTitleInput.addEventListener("input", function () {
+    editPagePreviewTitle.innerText = editPageTitleInput.value;
+});
+
+editPageContentInput.addEventListener("input", function () {
+    editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
 });
 
 // TODO: Add a confirmatioN!!!!
@@ -269,6 +318,8 @@ postPageDelete.addEventListener("click", async function () {
 });
 
 editPageSave.addEventListener("click", async function () {
+
+    editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
 
     let response;
 
