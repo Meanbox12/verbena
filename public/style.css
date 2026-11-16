@@ -3,6 +3,9 @@
     --header-color: #c19eff;
     --sidebar-color: #e5c7fc;
     --border-color: #7c55ba;
+    --button-color: #ffffff;
+    --button-hover-color: #c2c2c2;
+    --button-click-color: #999999;
 
     --corner-rounding: 10px;
     --sidebar-width: 15vw;
@@ -35,6 +38,49 @@ body {
     margin: 0;
     display: flex;
     flex-direction: column;
+}
+
+.large-text {
+    font-family: var(--primary-font);
+    font-weight: var(--primary-font-weight);
+    color: var(--primary-font-color);
+    margin: 0;
+    font-size: var(--primary-font-size);
+}
+
+.normal-text {
+    color: var(--secondary-font-color);
+    font-size: var(--secondary-font-size);
+    font-family: var(--secondary-font);
+}
+
+.small-text {
+    font-family: var(--tertiary-font);
+    font-weight: var(--tertiary-font-weight);
+    font-size: var(--tertiary-font-size);
+    color: var(--tertiary-font-color);
+}
+
+.text-button {
+    padding: 10px;
+    border-radius: var(--corner-rounding);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    background-color: var(--button-color);
+}
+
+.text-button:hover {
+    background-color: var(--button-hover-color);
+}
+
+.text-button:active {
+    background-color: var(--button-click-color);
+}
+
+hr {
+    border: none;
+    height: 2px;
+    background-color: var(--border-color);
 }
 
 #header {
@@ -131,9 +177,9 @@ body {
 
 .sidebar-heading {
     margin: 0;
-    color: var(--secondary-font-color);
-    font-family: var(--secondary-font);
-    font-weight: var(--secondary-font-weight);
+    color: var(--primary-font-color);
+    font-family: var(--primary-font);
+    font-weight: var(--primary-font-weight);
     font-size: var(--primary-font-size);
 }
 
@@ -151,52 +197,13 @@ body {
 }
 
 .post {
-    margin-bottom: 2vh;
     padding: 20px;
     padding-left: 0;
-    /*
-    margin: 20px;
-    padding: 2vh;
-    */
-    border-bottom: 2px solid var(--border-color);
-}
-
-.large-text {
-    font-family: var(--primary-font);
-    font-weight: var(--primary-font-weight);
-    color: var(--primary-font-color);
-    margin: 0;
-    font-size: var(--primary-font-size);
 }
 
 .post > .large-text {
     cursor: pointer;
     text-decoration: underline;
-}
-
-.post-link {
-    width: 20px;
-    cursor: pointer;
-}
-
-.text-button {
-    padding: 10px;
-    border-radius: var(--corner-rounding);
-    border: 2px solid var(--border-color);
-    cursor: pointer;
-}
-
-.small-text {
-    font-family: var(--tertiary-font);
-    font-weight: var(--tertiary-font-weight);
-    font-size: var(--tertiary-font-size);
-    color: var(--tertiary-font-color);
-}
-
-.normal-text {
-    color: var(--secondary-font-color);
-    font-size: var(--secondary-font-size);
-    font-family: var(--secondary-font);
 }
 
 /* TODO: Fix images copying each other's aspect ratios */
@@ -215,10 +222,19 @@ body {
     cursor: pointer;
 }
 
+#post-page-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
 #post-page-return,
 #edit-page-return {
-    cursor: pointer;
-    text-decoration: underline;
+    margin-bottom: 20px;
+}
+
+#post-page-number {
+    margin: 10px;
 }
 
 .page {
@@ -226,7 +242,7 @@ body {
 }
 
 .page-title {
-    border-bottom: 2px solid var(--border-color);
+    /* border-bottom: 2px solid var(--border-color); */
     padding-bottom: 10px;
 }
 
@@ -289,19 +305,8 @@ label {
     color: var(--border-color);
 }
 
-.post-markdown-container > blockquote {
-    border-left: 6px solid gray;
-}
-
-.post-markdown-container > blockquote > p {
-    padding-left: 6px;
-    font-family: var(--secondary-font);
-    font-weight: var(--secondary-font-weight);
-    font-size: var(--secondary-font-size);
-    color: var(--secondary-font-color);
-}
-
-.post-markdown-container > pre > code {
+.post-markdown-container > pre > code,
+.code-text {
     font-family: var(--code-font);
     font-weight: var(--code-font-weight);
     font-size: var(--code-font-size);
@@ -317,6 +322,10 @@ label {
     font-family: var(--primary-font);
     font-weight: var(--primary-font-weight);
     color: var(--primary-font-color);
+}
+
+.post-markdown-container > h1 {
+    font-size: var(--primary-font-size);
 }
 
 #image-viewer {

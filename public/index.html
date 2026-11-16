@@ -16,7 +16,8 @@
 <body>
 
     <div id="header">
-        <a class="link-text" id="header-logo-link"><img id="header-logo" src="/assets/placeholder.png" alt="Blog Logo"></a>
+        <a class="link-text" id="header-logo-link"><img id="header-logo" src="/assets/placeholder.png"
+                alt="Blog Logo"></a>
         <div id="header-text-group">
             <p id="header-title"></p>
             <p id="header-subtitle"></p>
@@ -40,18 +41,31 @@
             </div>
 
             <div id="post-page" class="page" style="display: none;">
-                <a class="small-text" id="post-page-return">
-                    <p>Return</p>
-                </a>
-                <p class="large-text page-title" id="post-page-title"></p>
 
-                <small class="small-text" id="post-page-info"></small>
-                
-                <p id="post-page-arrow-group" class="small-text">
-                    <a class="link-text" id="post-page-previous">« Previous Post</a> | <a id="post-page-number">#</a> |
-                    <a id="post-page-next" class="link-text">Next Post »</a>
-                </p>
-                
+                <div id="post-page-header">
+                    <div id="post-page-header-left">
+                        <button id="post-page-return" class="normal-text text-button">Return</button>
+
+                        <p class="large-text page-title" id="post-page-title"></p>
+
+                        <small class="small-text" id="post-page-info"></small>
+
+                        <p class="small-text">
+                            <button id="post-page-previous" class="small-text text-button">« Previous</button>
+                            <a id="post-page-number" class="code-text">#</a>
+                            <button id="post-page-next" class="small-text text-button">Next »</button>
+                        </p>
+                    </div>
+
+                    <div id="post-page-header-right">
+                        <button class="small-text text-button" id="post-page-raw">View Raw</button>
+                        <button class="small-text text-button" id="post-page-edit">Edit</button>
+                        <button class="small-text text-button" id="post-page-delete">Delete</button>
+                    </div>
+                </div>
+
+                <hr>
+
                 <p class="post-markdown-container" id="post-page-content"></p>
                 <!--
                     <div class="post-image-container">
@@ -59,19 +73,13 @@
                     <img class="post-image" src="/assets/placeholder.png" alt="Alt Text" title="Alt Text">
                     </div>
                     -->
-                
-
-                <button class="small-text text-button" id="post-page-raw">View Raw</button>
-                <button class="small-text text-button" id="post-page-delete">Delete this Post</button>
             </div>
 
             <div id="edit-page" class="page" style="display: none;">
                 <div id="edit-page-left">
-                    <a class="small-text" id="edit-page-return">
-                        <p>Return</p>
-                    </a>
+                    <button class="normal-text text-button" id="edit-page-return">Return</button>
 
-                    <p class="large-text page-title" id="edit-page-title">Create a Post</p>
+                    <p class="large-text page-title" id="edit-page-title">Post Editor</p>
 
                     <label class="small-text" for="edit-page-id-input">Post ID to Edit</label>
                     <input class="small-text" id="edit-page-id-input" placeholder="Type something...">
@@ -80,15 +88,17 @@
                     <input class="large-text" id="edit-page-title-input" placeholder="Type something...">
 
                     <label class="normal-text" for="edit-page-content-input">Content</label>
-                    <textarea class="normal-text" id="edit-page-content-input" placeholder="Type something..."></textarea>
+                    <textarea class="normal-text" id="edit-page-content-input"
+                        placeholder="Type something..."></textarea>
 
-                    <button class="large-text text-button" id="edit-page-save">Create Post</button>
+                    <button class="large-text text-button" id="edit-page-save">Save</button>
 
                     <p class="normal-text" id="edit-page-notice"></p>
                 </div>
 
                 <div id="edit-page-right">
                     <p class="large-text page-title" id="edit-page-preview-title">Preview will appear here...</p>
+                    <hr>
                     <p id="edit-page-preview" class="post-markdown-container"></p>
                 </div>
             </div>
@@ -99,18 +109,6 @@
         <img class="viewer-image" alt="Alt Text" title="Alt Text" src="/assets/placeholder.png">
         <p class="image-viewer-text">Alt Text</p>
         <small class="image-viewer-instructions">Click anywhere to close</small>
-    </div>
-
-    <!-- Example Post -->
-    <div class="post" style="display: none;">
-        <span class="large-text">Post Title <img class="post-link" src="/assets/link.png" alt="Copy link to post"
-                title="Copy link to post"></span>
-        <p class="normal-text">Post Content</p>
-        <div class="post-image-container">
-            <img class="post-image" src="/assets/placeholder.png" alt="Post Img 1" title="Post Img 1">
-            <img class="post-image" src="/assets/placeholder.png" alt="Post Img 2" title="Post Img 2">
-        </div>
-        <small class="small-text">Post Info</small>
     </div>
 </body>
 

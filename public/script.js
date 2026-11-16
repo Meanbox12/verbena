@@ -16,6 +16,7 @@ const postPageNumber = document.getElementById("post-page-number");
 const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
 const postPageRaw = document.getElementById("post-page-raw");
+const postPageEdit = document.getElementById("post-page-edit");
 const postPageDelete = document.getElementById("post-page-delete");
 
 const editPageTitle = document.getElementById("edit-page-title");
@@ -30,6 +31,7 @@ const editPagePreview = document.getElementById("edit-page-preview");
 
 let postViewId = 0;
 let totalPosts = 0;
+let postViewType = 1;
 
 let faithfulMarkdown = false;
 let listPagePopulated = false;
@@ -69,22 +71,6 @@ async function showPage(page, data) {
         listPage.style.display = "none";
         postPage.style.display = "none";
         editPage.style.display = "none";
-    }
-
-    /**
-     * Populates the Post page with a post.
-     * @param {Number} id The post's ID.
-     * @param {String} title The post's title.
-     * @param {String} content The post's content.
-     * @param {String} info The post's info.
-     */
-    function populatePostPage(id, title, content, info) {
-        postPageTitle.innerText = title;
-        postPageContent.innerHTML = parseMarkdown(content);
-        let date = new Date(Math.round(info)).toLocaleString();
-        postPageInfo.innerText = (date == "Invalid Date" ? info : date);
-        postPageNumber.innerText = "#" + id;
-        postViewId = parseInt(id);
     }
 
     /**
@@ -140,7 +126,30 @@ async function showPage(page, data) {
             let postObject = posts[i];
             let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at);
             listPage.appendChild(postElement);
+            listPage.appendChild(document.createElement("hr"));
         }
+    }
+
+    /**
+     * Populates the Post page with a post.
+     * @param {Number} id The post's ID.
+     * @param {String} title The post's title.
+     * @param {String} content The post's content.
+     * @param {String} info The post's info.
+     */
+    function populatePostPage(id, title, content, info) {
+        postPageTitle.innerText = title;
+        postPageContent.innerHTML = parseMarkdown(content);
+        let date = new Date(Math.round(info)).toLocaleString();
+        postPageInfo.innerText = (date == "Invalid Date" ? info : date);
+        postPageNumber.innerText = "#" + id;
+        postViewId = parseInt(id);
+    }
+
+    function populateEditPage(id, title, content) {
+        editPageIdInput.value = id;
+        editPageTitleInput.value = title;
+        editPageContentInput.value = content;
     }
 
     // List Page
@@ -150,6 +159,7 @@ async function showPage(page, data) {
             await populateListPage();
             listPagePopulated = true;
         }
+
         listPage.style.display = "block";
 
         if (data && data.history) {
@@ -160,16 +170,20 @@ async function showPage(page, data) {
 
     // Post Page
     else if (page == 2) {
+
         hideAllPages();
         if (data && data.populate) {
             await populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at);
         }
 
+        postViewType = 1;
+        postPageRaw.innerText = "View Raw";
+
         postPage.style.display = "block";
         // TODO: Save the scroll position on the site to return the user to where they were if they go back
         window.scroll(0, 0);
 
-        if (data.history) {
+        if (data && data.history) {
             let object = { "page": 2, "id": data.post.id };
             window.history.pushState(object, "", "/post/" + data.post.id);
         }
@@ -179,6 +193,11 @@ async function showPage(page, data) {
     else if (page == 3) {
         hideAllPages();
         editPage.style.display = "flex";
+
+        if (data && data.post) {
+            populateEditPage(data.post.id, data.post.title, data.post.content);
+        }
+
         // TODO: Call this somewhere else
         if (editPageTitleInput.value != "") {
             editPagePreviewTitle.innerText = editPageTitleInput.value;
@@ -190,7 +209,7 @@ async function showPage(page, data) {
 
         if (data && data.history) {
             let object = { "page": 3 }
-            window.history.pushState(object, "", "/edit");
+            window.history.pushState(object, "", "/edit" + (data.post ? "?post=" + data.post.id : ""));
         }
     }
 
@@ -215,7 +234,7 @@ async function getPost(id) {
         // TODO: Show an actual error message
     } else if (type.includes("text/html")) {
         if (await postRaw.text() == "Invalid post.") {
-            return { "id": 404, "title": "Invalid post.", "content": "You have searched for an invalid post!", "created_at": "N/A" };
+            throw new Error("Invalid post ID " + id);
         }
     }
 }
@@ -271,13 +290,20 @@ postPageNext.addEventListener("click", async function () {
 });
 
 postPageRaw.addEventListener("click", async function () {
-    if (postPageRaw.innerText == "View Raw") {
+    if (postViewType == 1) {
         postPageContent.innerText = (await getPost(postViewId)).content;
         postPageRaw.innerText = "View Formatted";
+        postViewType = 2;
     } else {
         postPageContent.innerHTML = parseMarkdown((await getPost(postViewId)).content);
         postPageRaw.innerText = "View Raw";
+        postViewType = 1;
     }
+});
+
+postPageEdit.addEventListener("click", async function () {
+    let post = await getPost(postViewId);
+    showPage(3, { "history": true, "post": { "id": postViewId, "title": post.title, "content": post.content } });
 });
 
 editPageReturn.addEventListener("click", function () {
@@ -386,7 +412,14 @@ window.onload = async function () {
             showPage(2, { populate: true, history: true, post: { id: postId, title: post.title, content: post.content, created_at: post.created_at } });
         }
     } else if (pathnamePage == "edit") {
-        showPage(3, { history: true });
+
+        let params = new URLSearchParams(document.location.search);
+
+        if (params.get("post")) {
+            showPage(3, { history: true, post: await getPost(params.get("post"))});
+        } else {
+            showPage(3, { history: true });
+        }
     } else {
         showPage(1, { history: true, populate: true });
     }

@@ -108,7 +108,7 @@ function modifyPost(id, type, title, content) {
     });
 }
 
-// TODO: Fix this to update other post IDs
+// TODO: Fix this to decrement other post IDs
 /**
  * Deletes a post from the database.
  * @param {Number} id The post ID to be deleted.
