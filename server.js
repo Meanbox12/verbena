@@ -15,7 +15,7 @@ const randomCommand = "";
 if (randomCommand != "") {
     db.run(randomCommand, (err) => {
         if (err) {
-            return console.log("error: " + err.message);
+            return console.error("error: " + err.message);
         }
         console.log("Did the thing");
     });
@@ -134,7 +134,7 @@ app.post("/api/create", async (req, res) => {
         res.send(createdPost.id);
     } catch (err) {
         res.send(false);
-        console.log(err.message);
+        console.error(err.message);
     }
 });
 
@@ -144,7 +144,7 @@ app.put("/api/edit/:postid", async (req, res) => {
         res.send(editedPost.id);
     } catch (err) {
         res.send(false);
-        console.log(err.message);
+        console.error(err.message);
     }
 });
 
@@ -154,14 +154,14 @@ app.delete("/api/delete/:postid", async (req, res) => {
         res.send(deletedPost.id);
     } catch (err) {
         res.send(false);
-        console.log(err.message);
+        console.error(err.message);
     }
 });
 
 app.get("/api/post/:postid", (req, res, next) => {
     db.get("SELECT id, title, content, created_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
         if (err) {
-            return console.log(err.message);
+            return console.error(err.message);
         }
 
         if (row) {
@@ -175,7 +175,7 @@ app.get("/api/post/:postid", (req, res, next) => {
 app.get("/api/posts", (req, res) => {
     db.all("SELECT * FROM posts WHERE type = 1", (err, content) => {
         if (err) {
-            return console.log(err.message);
+            return console.error(err.message);
         }
 
         res.json(content);
@@ -185,7 +185,7 @@ app.get("/api/posts", (req, res) => {
 app.get("/api/postcount", (req, res) => {
     db.get("SELECT COUNT() FROM posts WHERE type = 1", (err, count) => {
         if (err) {
-            return console.log(err.message);
+            return console.error(err.message);
         }
 
         res.send(count["COUNT()"]);
@@ -196,14 +196,29 @@ app.get("/api/info/:infoid", (req, res) => {
 
     db.get("SELECT content FROM info WHERE rowid = ?", [req.params.infoid], (err, row) => {
         if (err) {
-            return console.log(err.message);
+            return console.error(err.message);
         }
 
         if (row) {
-            console.log(row);
             res.json(row);
         } else {
-            res.send("Invalid post.");
+            res.send("Invalid request.");
+        }
+    });
+});
+
+app.get("/api/info", (req, res) => {
+
+    db.all("SELECT * FROM info", (err, content) => {
+        if (err) {
+            return console.error(err.message);
+        }
+
+        if (content) {
+            console.log(content);
+            res.json(content);
+        } else {
+            res.send("Invalid request.");
         }
     });
 });
