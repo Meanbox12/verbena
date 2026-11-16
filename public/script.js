@@ -1,6 +1,7 @@
 const postPage = document.getElementById("post-page");
 const listPage = document.getElementById("list-page");
 const editPage = document.getElementById("edit-page");
+const errorPage = document.getElementById("error-page");
 const sidebar = document.getElementById("sidebar-links-container");
 
 const headerLogoLink = document.getElementById("header-logo-link");
@@ -29,7 +30,12 @@ const editPageNotice = document.getElementById("edit-page-notice");
 const editPagePreviewTitle = document.getElementById("edit-page-preview-title");
 const editPagePreview = document.getElementById("edit-page-preview");
 
+const errorPageText = document.getElementById("error-page-text");
+const errorPageReturn = document.getElementById("error-page-return");
+
 let postViewId = 0;
+let currentPost;
+// TODO: Update this variable more often
 let totalPosts = 0;
 let postViewType = 1;
 
@@ -71,6 +77,7 @@ async function showPage(page, data) {
         listPage.style.display = "none";
         postPage.style.display = "none";
         editPage.style.display = "none";
+        errorPage.style.display = "none";
     }
 
     /**
@@ -174,6 +181,7 @@ async function showPage(page, data) {
         hideAllPages();
         if (data && data.populate) {
             await populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at);
+            currentPost = data.post;
         }
 
         postViewType = 1;
@@ -213,6 +221,17 @@ async function showPage(page, data) {
         }
     }
 
+    // Error Page
+    else if (page == 4) {
+        hideAllPages();
+
+        if (data && data.message) {
+            errorPageText.innerText = data.message;
+        }
+
+        errorPage.style.display = "block";
+    }
+
 }
 
 // TODO: Add the state setting as another option for this
@@ -231,11 +250,9 @@ async function getPost(id) {
         let post = await postRaw.json();
         return post;
 
-        // TODO: Show an actual error message
-    } else if (type.includes("text/html")) {
-        if (await postRaw.text() == "Invalid post.") {
-            throw new Error("Invalid post ID " + id);
-        }
+        // TODO: Update the server to send an actual error response instead of just text
+    } else {
+        throw new Error("Invalid post ID " + id);
     }
 }
 
@@ -279,33 +296,62 @@ postPageReturn.addEventListener("click", function () {
 
 postPagePrevious.addEventListener("click", async function () {
     if (postViewId > 1) {
-        showPage(2, { populate: true, history: true, post: await getPost(postViewId - 1) });
+        let post;
+        try {
+            post = await getPost(postViewId - 1);
+        } catch (err) {
+            showPage(4, { message: err.message });
+            return;
+        }
+
+        showPage(2, { "populate": true, "history": true, "post": post });
     }
 });
 
 postPageNext.addEventListener("click", async function () {
     if (postViewId < totalPosts) {
-        showPage(2, { populate: true, history: true, post: await getPost(postViewId + 1) });
+
+        let post;
+        try {
+            post = await getPost(postViewId + 1);
+        } catch (err) {
+            showPage(4, { message: err.message });
+            return;
+        }
+
+        showPage(2, { "populate": true, "history": true, "post": post });
     }
 });
 
 postPageRaw.addEventListener("click", async function () {
     if (postViewType == 1) {
-        postPageContent.innerText = (await getPost(postViewId)).content;
+        postPageContent.innerText = currentPost.content;
         postPageRaw.innerText = "View Formatted";
         postViewType = 2;
     } else {
-        postPageContent.innerHTML = parseMarkdown((await getPost(postViewId)).content);
+        postPageContent.innerHTML = parseMarkdown(currentPost.content);
         postPageRaw.innerText = "View Raw";
         postViewType = 1;
     }
 });
 
 postPageEdit.addEventListener("click", async function () {
-    let post = await getPost(postViewId);
+
+    // We fetch the post again here in case it has changed since the user opened it
+    let post;
+
+    try {
+        post = await getPost(postViewId);
+    } catch (err) {
+        showPage(4, { message: err.message });
+        return;
+    }
+
     showPage(3, { "history": true, "post": { "id": postViewId, "title": post.title, "content": post.content } });
 });
 
+// TODO: Make all the return buttons go back in history instead of going straight to the List page
+// TODO: Also make moving between post pages not count as a history change for the buttons
 editPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
 });
@@ -316,6 +362,10 @@ editPageTitleInput.addEventListener("input", function () {
 
 editPageContentInput.addEventListener("input", function () {
     editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
+});
+
+errorPageReturn.addEventListener("click", function () {
+    showPage(1, { history: true, populate: !listPagePopulated });
 });
 
 // TODO: Add a confirmatioN!!!!
@@ -387,7 +437,16 @@ onpopstate = async function (event) {
     if (event.state.page == 1) {
         showPage(1);
     } else if (event.state.page == 2) {
-        showPage(2, { populate: true, post: await getPost(event.state.id) });
+
+        let post;
+
+        try {
+            post = await getPost(event.state.id);
+        } catch (err) {
+            console.error(err.message);
+        }
+
+        showPage(2, { "populate": true, "post": post });
     } else if (event.state.page == 3) {
         showPage(3);
     }
@@ -406,17 +465,36 @@ window.onload = async function () {
 
     if (pathnamePage == "post") {
         let postId = pathnameArray[2];
-        let post = await getPost(postId);
+        let post;
+
+        try {
+            post = await getPost(postId);
+        } catch (err) {
+            console.error(err.message);
+            showPage(4, { "message": err.message });
+        }
 
         if (post) {
-            showPage(2, { populate: true, history: true, post: { id: postId, title: post.title, content: post.content, created_at: post.created_at } });
+            showPage(2, { populate: true, history: true, "post": { id: postId, title: post.title, content: post.content, created_at: post.created_at } });
         }
     } else if (pathnamePage == "edit") {
 
         let params = new URLSearchParams(document.location.search);
 
         if (params.get("post")) {
-            showPage(3, { history: true, post: await getPost(params.get("post"))});
+
+            let post;
+
+            try {
+                post = await getPost(params.get("post"));
+            } catch (err) {
+                console.error(err.message);
+                showPage(4, { "message": err.message });
+            }
+
+            if (post) {
+                showPage(3, { "history": true, "post": post });
+            }
         } else {
             showPage(3, { history: true });
         }
