@@ -44,7 +44,7 @@ async function loadDatabase(fileName) {
     
     const createTable2 = `
     CREATE TABLE IF NOT EXISTS info (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type INTEGER PRIMARY KEY,
     content TEXT NOT NULL
     )
     `
@@ -192,8 +192,20 @@ app.get("/api/postcount", (req, res) => {
     });
 });
 
-app.get("/api/info", (req, res, next) => {
-    res.json({ "title": "Verbena", "subtitle": "Welcome to Verbena!" });
+app.get("/api/info/:infoid", (req, res) => {
+
+    db.get("SELECT content FROM info WHERE rowid = ?", [req.params.infoid], (err, row) => {
+        if (err) {
+            return console.log(err.message);
+        }
+
+        if (row) {
+            console.log(row);
+            res.json(row);
+        } else {
+            res.send("Invalid post.");
+        }
+    });
 });
 
 app.get("/post/:postid", (req, res) => {

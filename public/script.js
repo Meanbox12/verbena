@@ -4,6 +4,7 @@ const editPage = document.getElementById("edit-page");
 const errorPage = document.getElementById("error-page");
 const sidebar = document.getElementById("sidebar-links-container");
 
+const headerLogo = document.getElementById("header-logo");
 const headerLogoLink = document.getElementById("header-logo-link");
 const headerTitle = document.getElementById("header-title");
 const headerSubtitle = document.getElementById("header-subtitle");
@@ -268,11 +269,16 @@ async function getPostCount() {
  * Populates the site's header.
  */
 async function populateHeader() {
-    let headerPost = await (await fetch("/api/post/-2")).json();
 
-    headerTitle.innerHTML = headerPost.title;
-    headerSubtitle.innerHTML = headerPost.content;
-    headerSearchbarLabel.innerHTML = "Search " + headerPost.title;
+    let title = (await (await fetch("/api/info/1")).json()).content;
+    let subtitle = (await (await fetch("/api/info/2")).json()).content;
+    let logo = (await (await fetch("/api/info/3")).json()).content;
+
+    headerLogo.src = logo;
+    headerTitle.innerHTML = title;
+    headerSubtitle.innerHTML = subtitle;
+    headerSearchbarLabel.innerHTML = "Search " + title;
+    document.title = title;
 }
 
 /**
