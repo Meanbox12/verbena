@@ -228,13 +228,21 @@ hr {
     justify-content: space-between;
 }
 
+#post-page-header-right {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+}
+
 #post-page-return,
 #edit-page-return {
     margin-bottom: 20px;
 }
 
 #post-page-number {
-    margin: 10px;
+    margin-top: 8px;
+    margin-right: 8px;
 }
 
 .page {
@@ -242,7 +250,6 @@ hr {
 }
 
 .page-title {
-    /* border-bottom: 2px solid var(--border-color); */
     padding-bottom: 10px;
 }
 
@@ -360,7 +367,6 @@ label {
 }
 
 /* Rule for small screens */
-/* TODO: On mobile devices, show a modal where the user can see the title, logo, and flavortext and press "View links" or "View posts" */
 @media (max-width: 1150px) {
 
     body {
