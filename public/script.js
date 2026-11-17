@@ -13,7 +13,8 @@ const headerSearchbarLabel = document.getElementById("header-searchbar-label");
 const postPageReturn = document.getElementById("post-page-return");
 const postPageTitle = document.getElementById("post-page-title");
 const postPageContent = document.getElementById("post-page-content");
-const postPageInfo = document.getElementById("post-page-info");
+const postPageCreated = document.getElementById("post-page-created");
+const postPageModified = document.getElementById("post-page-modified");
 const postPageNumber = document.getElementById("post-page-number");
 const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
@@ -92,10 +93,11 @@ async function showPage(page, data) {
          * @param {Number} id The post's ID.
          * @param {String} title The post's title.
          * @param {String} content The post's content.
-         * @param {String} info The post's info.
+         * @param {String} created_at The post's creation date.
+         * @param {String} modified_at The post's last modified date.
          * @returns {Element} The created HTML element.
          */
-        function createPostElement(id, title, content, info) {
+        function createPostElement(id, title, content, created_at, modified_at) {
             let postElement = document.createElement("div");
             postElement.className = "post"
             postElement.id = "post-" + id;
@@ -115,12 +117,12 @@ async function showPage(page, data) {
 
             let postElementInfo = document.createElement("small");
             postElementInfo.className = "small-text";
-            let date = new Date(Math.round(info)).toLocaleString();
-            postElementInfo.innerText = (date == "Invalid Date" ? info : date);
+            let creationDate = new Date(Math.round(created_at)).toLocaleString();
+            postElementInfo.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
             postElement.appendChild(postElementInfo);
 
             postElementTitle.addEventListener("click", function () {
-                showPage(2, { populate: true, history: true, post: { id: id, title: title, content: content, created_at: info } });
+                showPage(2, { populate: true, history: true, post: { id: id, title: title, content: content, created_at: created_at, modified_at: modified_at } });
             });
 
             return postElement;
@@ -132,7 +134,7 @@ async function showPage(page, data) {
 
         for (let i = posts.length - 1; i >= 0; i--) {
             let postObject = posts[i];
-            let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at);
+            let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at, postObject.modified_at);
             listPage.appendChild(postElement);
             listPage.appendChild(document.createElement("hr"));
         }
@@ -143,13 +145,16 @@ async function showPage(page, data) {
      * @param {Number} id The post's ID.
      * @param {String} title The post's title.
      * @param {String} content The post's content.
-     * @param {String} info The post's info.
+     * @param {String} created_at The post's creation date.
+     * @param {String} modified_at The post's last modified date.
      */
-    function populatePostPage(id, title, content, info) {
+    function populatePostPage(id, title, content, created_at, modified_at) {
         postPageTitle.innerText = title;
         postPageContent.innerHTML = parseMarkdown(content);
-        let date = new Date(Math.round(info)).toLocaleString();
-        postPageInfo.innerText = (date == "Invalid Date" ? info : date);
+        let creationDate = new Date(Math.round(created_at)).toLocaleString();
+        let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
+        postPageCreated.innerText = "Created on " + (creationDate == "Invalid Date" ?  + created_at : creationDate);
+        postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ?  + modified_at : modifiedDate);
         postPageNumber.innerText = "#" + id;
         postViewId = parseInt(id);
     }
@@ -181,7 +186,7 @@ async function showPage(page, data) {
 
         hideAllPages();
         if (data && data.populate) {
-            await populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at);
+            await populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at, data.post.modified_at);
             currentPost = data.post;
         }
 
@@ -285,7 +290,7 @@ async function populateHeader() {
  * Populates the site's sidebar.
  */
 async function populateSidebar() {
-    let sidebarPost = await (await fetch("/api/post/-1")).json();
+    let sidebarPost = await (await fetch("/api/info/4")).json();
 
     sidebar.innerHTML = sidebarPost.content;
 }
@@ -377,8 +382,14 @@ errorPageReturn.addEventListener("click", function () {
 // TODO: Add a confirmatioN!!!!
 postPageDelete.addEventListener("click", async function () {
 
-    alert("The delete button is disabled for now.")
-    return;
+    // alert("The delete button is disabled for now.")
+    // return;
+
+    let confirmation = confirm("Are you sure you want to delete the post? This action cannot be undone.");
+    
+    if (!confirmation) {
+        return;
+    }
 
     response = await fetch("/api/delete/" + postViewId, {
         method: "DELETE"
@@ -403,9 +414,11 @@ editPageSave.addEventListener("click", async function () {
 
     editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
 
+    let editing = false;
     let response;
 
     if (editPageIdInput.value != "" && editPageIdInput.value <= totalPosts) {
+        editing = true;
         response = await fetch("/api/edit/" + editPageIdInput.value, {
             method: "PUT",
             headers: {
@@ -428,7 +441,11 @@ editPageSave.addEventListener("click", async function () {
         let responseText = await response.text();
 
         if (responseText != "false") {
-            editPageNotice.innerText = `New post created with ID ${responseText}.`;
+            if (editing) {
+                editPageNotice.innerHTML = `Successfully edited post ${responseText}. Click <a href='/post/${responseText}'>here</a> to view.`;
+            } else {
+                editPageNotice.innerHTML = `New post created with ID ${responseText}. Click <a href='/post/${responseText}'>here</a> to view.`;
+            }
             totalPosts = await getPostCount();
         } else {
             editPageNotice.innerText = "An error occured when creating the post.";
@@ -481,7 +498,7 @@ window.onload = async function () {
         }
 
         if (post) {
-            showPage(2, { populate: true, history: true, "post": { id: postId, title: post.title, content: post.content, created_at: post.created_at } });
+            showPage(2, { populate: true, history: true, "post": { id: postId, title: post.title, content: post.content, created_at: post.created_at, modified_at: post.modified_at } });
         }
     } else if (pathnamePage == "edit") {
 

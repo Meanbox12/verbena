@@ -41,7 +41,7 @@ async function loadDatabase(fileName) {
     modified_at TEXT NOT NULL
     )
     `
-    
+
     const createTable2 = `
     CREATE TABLE IF NOT EXISTS info (
     type INTEGER PRIMARY KEY,
@@ -114,16 +114,53 @@ function modifyPost(id, type, title, content) {
  * @param {Number} id The post ID to be deleted.
  * @returns {Promise} A Promise that will either resolve to the deleted post or an error message if the delete fails.
  */
-function deletePost(id) {
+async function deletePost(id) {
+
+    id = parseInt(id);
+
     return new Promise((resolve, reject) => {
-        db.get("DELETE FROM posts WHERE id = ? RETURNING *", [id], (err, row) => {
+
+        // Get the post count
+        db.get("SELECT COUNT() FROM posts", async (err, count) => {
             if (err) {
                 reject(err);
             }
 
-            db.run("REINDEX posts");
+            let postCount = parseInt(count["COUNT()"]);
 
-            resolve(row);
+            console.log("There are " + postCount + " posts");
+
+            // Delete the post
+            console.log("Deleting post with ID " + id);
+
+            db.get("DELETE FROM posts WHERE rowid = ? RETURNING *", [id], (err, row) => {
+                if (err) {
+                    reject(err);
+                }
+
+                // Reindex post IDs
+                for (let i = (id + 1); i <= postCount; i++) {
+
+                    console.log("Updating post with ID " + (i) + " to have ID " + (i - 1));
+
+                    db.run("UPDATE posts SET id = ? WHERE id = ?", [i-1, i], (err) => {
+                        if (err) {
+                            reject(err);
+                        }
+                    });
+                }
+
+                // Update the row count
+                db.run("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [postCount - 1, "posts"], (err) => {
+                        if (err) {
+                            reject(err);
+                        }
+                    });
+
+                resolve(row);
+
+            });
+            
         });
     });
 }
@@ -159,7 +196,7 @@ app.delete("/api/delete/:postid", async (req, res) => {
 });
 
 app.get("/api/post/:postid", (req, res, next) => {
-    db.get("SELECT id, title, content, created_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
+    db.get("SELECT id, title, content, created_at, modified_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
         if (err) {
             return console.error(err.message);
         }
