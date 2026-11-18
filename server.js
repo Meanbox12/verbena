@@ -21,8 +21,6 @@ if (randomCommand != "") {
     });
 }
 
-// TODO: Replace all the SQL command string literals with quotes and put the variables outside of the strings
-
 /**
  * Loads the SQLite database.
  * @param {String} fileName The filename to load the database from.
@@ -61,7 +59,36 @@ async function loadDatabase(fileName) {
         }
     });
 
+    let updatedCount = await getPostCount();
+
+    // Update the row count
+    db.run("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [updatedCount, "posts"], async (err) => {
+        if (err) {
+            console.error(err.message);
+            return;
+        }
+
+        console.log("Updated the post count to " + updatedCount);
+    });
+
     return true;
+}
+
+function getPostCount() {
+
+    return new Promise((resolve, reject) => {
+        db.get("SELECT COUNT() FROM posts", (err, count) => {
+            if (err) {
+                console.error(err.message);
+                reject(err);
+            }
+
+            let parsedCount = parseInt(count["COUNT()"]);
+            resolve(parsedCount);
+        });
+    });
+
+
 }
 
 /**
@@ -81,6 +108,8 @@ function createPost(type, title, content) {
                 reject(err);
             }
 
+            console.log("Created new post with ID " + row.id);
+
             resolve(row);
         });
     });
@@ -98,7 +127,7 @@ function modifyPost(id, type, title, content) {
     let time = Date.now();
 
     return new Promise((resolve, reject) => {
-        db.get("UPDATE posts SET type = ?, title = ?, content = ?, modified_at = ? WHERE id = ? RETURNING *", [type, title, content, time, id], (err, row) => {
+        db.get("UPDATE posts SET type = ?, title = ?, content = ?, modified_at = ? WHERE rowid = ? RETURNING *", [type, title, content, time, id], (err, row) => {
             if (err) {
                 reject(err);
             }
@@ -117,50 +146,39 @@ function modifyPost(id, type, title, content) {
 async function deletePost(id) {
 
     id = parseInt(id);
+    postCount = await getPostCount();
 
     return new Promise((resolve, reject) => {
 
-        // Get the post count
-        db.get("SELECT COUNT() FROM posts", async (err, count) => {
+        // Delete the post
+        db.get("DELETE FROM posts WHERE rowid = ? RETURNING *", [id], async (err, row) => {
             if (err) {
                 reject(err);
             }
 
-            let postCount = parseInt(count["COUNT()"]);
+            // Reindex post IDs
+            for (let i = (id + 1); i <= postCount; i++) {
 
-            console.log("There are " + postCount + " posts");
+                await new Promise((resolve, reject) => {
+                    db.get("UPDATE posts SET id = ? WHERE id = ? RETURNING *", [i - 1, i], (err, row) => {
+                        if (err) {
+                            reject(err);
+                        }
 
-            // Delete the post
-            console.log("Deleting post with ID " + id);
+                        resolve(row);
+                    });
+                });
+            }
 
-            db.get("DELETE FROM posts WHERE rowid = ? RETURNING *", [id], (err, row) => {
+            // Update the row count
+            db.run("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [postCount - 1, "posts"], (err) => {
                 if (err) {
                     reject(err);
                 }
-
-                // Reindex post IDs
-                for (let i = (id + 1); i <= postCount; i++) {
-
-                    console.log("Updating post with ID " + (i) + " to have ID " + (i - 1));
-
-                    db.run("UPDATE posts SET id = ? WHERE id = ?", [i-1, i], (err) => {
-                        if (err) {
-                            reject(err);
-                        }
-                    });
-                }
-
-                // Update the row count
-                db.run("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [postCount - 1, "posts"], (err) => {
-                        if (err) {
-                            reject(err);
-                        }
-                    });
-
-                resolve(row);
-
             });
-            
+
+            resolve(row);
+
         });
     });
 }
@@ -168,6 +186,7 @@ async function deletePost(id) {
 app.post("/api/create", async (req, res) => {
     try {
         let createdPost = await createPost(req.body.type, req.body.title, req.body.content);
+        postCount = await getPostCount();
         res.send(createdPost.id);
     } catch (err) {
         res.send(false);
@@ -252,7 +271,6 @@ app.get("/api/info", (req, res) => {
         }
 
         if (content) {
-            console.log(content);
             res.json(content);
         } else {
             res.send("Invalid request.");
