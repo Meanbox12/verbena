@@ -1,8 +1,11 @@
 const express = require("express");
+const multer = require("multer");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("node:path");
+const fs = require("node:fs");
 
 const app = express();
+const upload = multer({dest: "public/uploads/"});
 let db;
 
 const PORT = 4000;
@@ -258,13 +261,14 @@ app.delete("/api/delete/:postid", async (req, res) => {
 app.get("/api/post/:postid", (req, res) => {
     db.get("SELECT * FROM posts WHERE id = ?", [req.params.postid], (err, row) => {
         if (err) {
-            return console.error(err.message);
+            console.error(err.message)
+            return res.send(err.message);
         }
 
         if (row) {
             res.json(row);
         } else {
-            res.send("Invalid post.");
+            res.send("Post " + req.params.postid + " does not exist.");
         }
     });
 });
@@ -317,6 +321,19 @@ app.get("/api/info", (req, res) => {
             res.send("Invalid request.");
         }
     });
+});
+
+app.get("/upload", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "upload.html"));
+});
+
+// TODO: Upload files with their actual file hash, clean unused uploads, possibly use a different library
+app.post("/api/upload", upload.single("file"), async (req, res) => {
+    let originalName = req.file.originalname;
+    let originalNameParts = originalName.split(".");
+    let extension = originalNameParts[originalNameParts.length - 1];
+    fs.renameSync(req.file.path, req.file.path + "." + extension);
+    res.sendStatus(200);
 });
 
 app.get("/post/:postid", (req, res) => {

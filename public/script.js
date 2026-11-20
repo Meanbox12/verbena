@@ -52,17 +52,13 @@ let listPagePopulated = false;
  * @returns The parsed string as HTML.
  */
 function parseMarkdown(markdown) {
-
-    let editedMarkdown;
-
     if (faithfulMarkdown) {
-        editedMarkdown = markdown;
+        return marked.parse(markdown);
     } else {
         // Faithful markdown follows the markdown syntax exactly, but turning it off makes newlines work properly
-        editedMarkdown = markdown.replaceAll("\n", "  \n");
+        let editedMarkdown = markdown.replaceAll("\n", "  \n");
+        return marked.parse(editedMarkdown);
     }
-
-    return marked.parse(editedMarkdown);
 }
 
 /**
@@ -262,9 +258,6 @@ async function showPage(page, data) {
 
 }
 
-// TODO: Add the state setting as another option for this
-// (Note: I have no idea what I was talking about when I wrote this todo, so I am going to delete it in the next commit)
-
 /**
  * Fetches a post's info from the server using a post ID.
  * @param {String} id The post ID to be fetched.
@@ -278,10 +271,8 @@ async function getPost(id) {
     if (type.includes("application/json")) {
         let post = await postRaw.json();
         return post;
-
-        // TODO: Update the server to send an actual error response instead of just text
     } else {
-        throw new Error("Invalid post ID " + id);
+        throw new Error(await postRaw.text());
     }
 }
 
@@ -305,6 +296,7 @@ async function populateHeader() {
     let logo = info[2].content;
 
     headerLogo.src = logo;
+    headerLogo.setAttribute("alt", title + " Logo");
     headerTitle.innerHTML = title;
     headerSubtitle.innerHTML = subtitle;
     headerSearchbarLabel.innerHTML = "Search " + title;
