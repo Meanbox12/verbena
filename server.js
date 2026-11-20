@@ -5,7 +5,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 
 const app = express();
-const upload = multer({dest: "public/uploads/"});
+const upload = multer({dest: "public/uploads/temp/"});
 let db;
 
 const PORT = 4000;
@@ -327,13 +327,39 @@ app.get("/upload", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "upload.html"));
 });
 
-// TODO: Upload files with their actual file hash, clean unused uploads, possibly use a different library
+// TODO: Clean orphaned uploads??
 app.post("/api/upload", upload.single("file"), async (req, res) => {
+
+    // This function is from my Million Dollar Challenge project hasher.html
+    async function hash(input) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(input);
+
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray
+            .map(b => b.toString(16).padStart(2, "0"))
+            .join("");
+
+        return hashHex;
+    }
+
     let originalName = req.file.originalname;
     let originalNameParts = originalName.split(".");
     let extension = originalNameParts[originalNameParts.length - 1];
-    fs.renameSync(req.file.path, req.file.path + "." + extension);
-    res.sendStatus(200);
+
+    let parsedFile = fs.readFileSync(req.file.path);
+
+    let fileHash = await hash(parsedFile);
+
+    if (fs.readdirSync("public/uploads").some(item => item.includes(fileHash))) {
+        fs.unlinkSync(req.file.path);
+        res.sendStatus(200);
+    } else {
+        fs.renameSync(req.file.path, "public/uploads/" + fileHash + "." + extension);
+        res.sendStatus(201);
+    }
 });
 
 app.get("/post/:postid", (req, res) => {
