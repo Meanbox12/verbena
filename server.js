@@ -21,8 +21,6 @@ if (randomCommand != "") {
     });
 }
 
-// TODO: Post IDs are randomly generated strings
-
 /**
  * Loads the SQLite database.
  * @param {String} fileName The filename to load the database from.
@@ -77,6 +75,10 @@ async function loadDatabase(fileName) {
     return true;
 }
 
+/**
+ * Gets the current post count.
+ * @returns {Number} The current post count.
+ */
 function getPostCount() {
 
     return new Promise((resolve, reject) => {
@@ -94,6 +96,7 @@ function getPostCount() {
 
 /**
  * Generates a unique post ID that is not in use by any other post.
+ * @returns {String} The generated post ID.
  */
 async function generatePostId() {
 
@@ -140,7 +143,6 @@ async function createPost(type, title, content) {
 
     let time = Date.now();
     let id = await generatePostId();
-    console.log(id);
 
     return new Promise((resolve, reject) => {
         db.get("INSERT INTO posts (id, type, title, content, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING *", [id, type, title, content, time, time], (err, row) => {
@@ -149,8 +151,6 @@ async function createPost(type, title, content) {
             }
 
             resolve(row);
-
-            console.log(row);
 
             console.log("Created new post with ID " + row.id);
         });
@@ -166,6 +166,7 @@ async function createPost(type, title, content) {
  * @returns {Promise} A Promise that will either resolve to the edited post or an error message if the edit fails.
  */
 function modifyPost(id, type, title, content) {
+
     let time = Date.now();
 
     return new Promise((resolve, reject) => {
@@ -179,16 +180,12 @@ function modifyPost(id, type, title, content) {
     });
 }
 
-// TODO: Rewrite this with the new IDs and numbers
-
 /**
  * Deletes a post from the database.
  * @param {String} id The post ID to be deleted.
  * @returns {Promise} A Promise that will either resolve to the deleted post or an error message if the delete fails.
  */
 async function deletePost(id) {
-
-    console.log("Deleting post iwth id" + id);
 
     postCount = await getPostCount();
 
@@ -200,13 +197,10 @@ async function deletePost(id) {
                 return reject(err);
             }
 
-            console.log(row);
-
             // Reindex post IDs
             for (let i = (row.number + 1); i <= postCount; i++) {
 
                 await new Promise((resolve, reject) => {
-                    console.log(`UPDATE posts SET number = ${i-1} WHERE number = ${i} RETURNING *`);
                     db.get("UPDATE posts SET number = ? WHERE number = ? RETURNING *", [i - 1, i], (err, row) => {
                         if (err) {
                             return reject(err);
@@ -252,11 +246,6 @@ app.put("/api/edit/:postid", async (req, res) => {
 });
 
 app.delete("/api/delete/:postid", async (req, res) => {
-
-    let deletedPost = await deletePost(req.params.postid);
-    res.send(deletedPost.id);
-
-    /*
     try {
         let deletedPost = await deletePost(req.params.postid);
         res.send(deletedPost.id);
@@ -264,11 +253,10 @@ app.delete("/api/delete/:postid", async (req, res) => {
         res.send(false);
         console.error(err.message);
     }
-        */
 });
 
 app.get("/api/post/:postid", (req, res) => {
-    db.get("SELECT id, title, content, created_at, modified_at FROM posts WHERE id = ?", [req.params.postid], (err, row) => {
+    db.get("SELECT * FROM posts WHERE id = ?", [req.params.postid], (err, row) => {
         if (err) {
             return console.error(err.message);
         }

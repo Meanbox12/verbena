@@ -240,7 +240,7 @@ hr {
     margin-bottom: 20px;
 }
 
-#post-page-number {
+#post-page-id {
     margin-top: 8px;
     margin-right: 8px;
 }
@@ -258,6 +258,7 @@ hr {
     text-decoration: underline;
 }
 
+/* TODO: Fix whatever is going on with the margins on the edit page */
 #edit-page {
     display: flex;
     flex-direction: row;
@@ -333,6 +334,10 @@ label {
 
 .post-markdown-container > h1 {
     font-size: var(--primary-font-size);
+}
+
+.post-markdown-container > img {
+    border-radius: var(--corner-rounding);
 }
 
 #image-viewer {

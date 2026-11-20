@@ -15,8 +15,7 @@ const postPageTitle = document.getElementById("post-page-title");
 const postPageContent = document.getElementById("post-page-content");
 const postPageCreated = document.getElementById("post-page-created");
 const postPageModified = document.getElementById("post-page-modified");
-const postPagePrevious = document.getElementById("post-page-previous");
-const postPageNext = document.getElementById("post-page-next");
+const postPageId = document.getElementById("post-page-id");
 const postPageRaw = document.getElementById("post-page-raw");
 const postPageEdit = document.getElementById("post-page-edit");
 const postPageDelete = document.getElementById("post-page-delete");
@@ -39,6 +38,8 @@ let currentPost;
 // TODO: Update this variable more often
 let totalPosts = 0;
 let postViewType = 1;
+
+let previousScroll = 0;
 
 let faithfulMarkdown = false;
 let listPagePopulated = false;
@@ -129,13 +130,13 @@ async function showPage(page, data) {
             postElementModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
             postElement.appendChild(postElementModified);
 
-            
+
             postElementTitle.addEventListener("click", function (event) {
                 // Stop the link from actually redirecting
                 event.preventDefault();
                 showPage(2, { populate: true, history: true, post: { id: id, title: title, content: content, created_at: created_at, modified_at: modified_at } });
             });
-            
+
 
             return postElement;
         }
@@ -167,6 +168,7 @@ async function showPage(page, data) {
         let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
         postPageCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
         postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
+        postPageId.innerText = id;
         postViewId = id;
     }
 
@@ -179,12 +181,18 @@ async function showPage(page, data) {
     // List Page
     if (page == 1) {
         hideAllPages();
-        if (data && data.populate) {
+        if (data && data.populate || !listPagePopulated) {
             await populateListPage();
             listPagePopulated = true;
         }
 
         listPage.style.display = "block";
+
+        console.log(previousScroll);
+        if (previousScroll != 0) {
+            window.scroll(0, previousScroll);
+            previousScroll = 0;
+        }
 
         if (data && data.history) {
             let object = { "page": 1 }
@@ -194,6 +202,9 @@ async function showPage(page, data) {
 
     // Post Page
     else if (page == 2) {
+
+        console.log(scrollY);
+        previousScroll = scrollY;
 
         hideAllPages();
         if (data && data.populate) {
@@ -252,6 +263,7 @@ async function showPage(page, data) {
 }
 
 // TODO: Add the state setting as another option for this
+// (Note: I have no idea what I was talking about when I wrote this todo, so I am going to delete it in the next commit)
 
 /**
  * Fetches a post's info from the server using a post ID.
@@ -286,9 +298,11 @@ async function getPostCount() {
  */
 async function populateHeader() {
 
-    let title = (await (await fetch("/api/info/1")).json()).content;
-    let subtitle = (await (await fetch("/api/info/2")).json()).content;
-    let logo = (await (await fetch("/api/info/3")).json()).content;
+    let info = await (await fetch("/api/info")).json();
+
+    let title = info[0].content;
+    let subtitle = info[1].content;
+    let logo = info[2].content;
 
     headerLogo.src = logo;
     headerTitle.innerHTML = title;
@@ -308,41 +322,8 @@ async function populateSidebar() {
 
 // Event Listeners
 
-headerLogoLink.addEventListener("click", function () {
-    showPage(1, { history: true, populate: true });
-});
-
 postPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
-});
-
-postPagePrevious.addEventListener("click", async function () {
-    if (postViewId > 1) {
-        let post;
-        try {
-            post = await getPost(postViewId - 1);
-        } catch (err) {
-            showPage(4, { message: err.message });
-            return;
-        }
-
-        showPage(2, { "populate": true, "history": true, "post": post });
-    }
-});
-
-postPageNext.addEventListener("click", async function () {
-    if (postViewId < totalPosts) {
-
-        let post;
-        try {
-            post = await getPost(postViewId + 1);
-        } catch (err) {
-            showPage(4, { message: err.message });
-            return;
-        }
-
-        showPage(2, { "populate": true, "history": true, "post": post });
-    }
 });
 
 postPageRaw.addEventListener("click", async function () {
@@ -372,8 +353,7 @@ postPageEdit.addEventListener("click", async function () {
     showPage(3, { "history": true, "post": { "id": postViewId, "title": post.title, "content": post.content } });
 });
 
-// TODO: Make all the return buttons go back in history instead of going straight to the List page
-// TODO: Also make moving between post pages not count as a history change for the buttons
+// TODO: Make this return button go back to the post page if the Edit button was clicked
 editPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
 });
@@ -390,14 +370,10 @@ errorPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
 });
 
-// TODO: Add a confirmatioN!!!!
 postPageDelete.addEventListener("click", async function () {
 
-    // alert("The delete button is disabled for now.")
-    // return;
-
     let confirmation = confirm("Are you sure you want to delete the post? This action cannot be undone.");
-    
+
     if (!confirmation) {
         return;
     }
@@ -411,13 +387,12 @@ postPageDelete.addEventListener("click", async function () {
         let responseText = await response.text();
 
         if (responseText != "false") {
-            alert(`Deleted post ${postViewId}`);
-            totalPosts = await getPostCount();
+            window.location.href = "/";
         } else {
-            editPageNotice.innerText = "An error occured when creating the post.";
+            alert("An error occured when deleting the post.");
         }
     } else {
-        editPageNotice.innerText = "An error occured when creating the post.";
+        alert("An error occured when deleting the post.");
     }
 });
 
@@ -428,7 +403,7 @@ editPageSave.addEventListener("click", async function () {
     let editing = false;
     let response;
 
-    if (editPageIdInput.value != "" && editPageIdInput.value <= totalPosts) {
+    if (editPageIdInput.value != "") {
         editing = true;
         response = await fetch("/api/edit/" + editPageIdInput.value, {
             method: "PUT",
@@ -452,12 +427,7 @@ editPageSave.addEventListener("click", async function () {
         let responseText = await response.text();
 
         if (responseText != "false") {
-            if (editing) {
-                editPageNotice.innerHTML = `Successfully edited post ${responseText}. Click <a href='/post/${responseText}'>here</a> to view.`;
-            } else {
-                editPageNotice.innerHTML = `New post created with ID ${responseText}. Click <a href='/post/${responseText}'>here</a> to view.`;
-            }
-            totalPosts = await getPostCount();
+            window.location.href = "/post/" + responseText;
         } else {
             editPageNotice.innerText = "An error occured when creating the post.";
         }
