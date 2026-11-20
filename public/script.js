@@ -15,7 +15,6 @@ const postPageTitle = document.getElementById("post-page-title");
 const postPageContent = document.getElementById("post-page-content");
 const postPageCreated = document.getElementById("post-page-created");
 const postPageModified = document.getElementById("post-page-modified");
-const postPageNumber = document.getElementById("post-page-number");
 const postPagePrevious = document.getElementById("post-page-previous");
 const postPageNext = document.getElementById("post-page-next");
 const postPageRaw = document.getElementById("post-page-raw");
@@ -35,7 +34,7 @@ const editPagePreview = document.getElementById("edit-page-preview");
 const errorPageText = document.getElementById("error-page-text");
 const errorPageReturn = document.getElementById("error-page-return");
 
-let postViewId = 0;
+let postViewId = "";
 let currentPost;
 // TODO: Update this variable more often
 let totalPosts = 0;
@@ -106,6 +105,7 @@ async function showPage(page, data) {
             postElementTitle.className = "large-text";
             postElementTitle.innerText = title;
             postElementTitle.tabIndex = 0;
+            postElementTitle.href = "/post/" + id;
             postElement.appendChild(postElementTitle);
 
             let postElementContent = document.createElement("p");
@@ -115,15 +115,27 @@ async function showPage(page, data) {
 
             // TODO: Add the image viewer
 
-            let postElementInfo = document.createElement("small");
-            postElementInfo.className = "small-text";
+            let postElementCreated = document.createElement("small");
+            postElementCreated.className = "small-text";
             let creationDate = new Date(Math.round(created_at)).toLocaleString();
-            postElementInfo.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
-            postElement.appendChild(postElementInfo);
+            postElementCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
+            postElement.appendChild(postElementCreated);
 
-            postElementTitle.addEventListener("click", function () {
+            postElement.appendChild(document.createElement("br"));
+
+            let postElementModified = document.createElement("small");
+            postElementModified.className = "small-text";
+            let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
+            postElementModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
+            postElement.appendChild(postElementModified);
+
+            
+            postElementTitle.addEventListener("click", function (event) {
+                // Stop the link from actually redirecting
+                event.preventDefault();
                 showPage(2, { populate: true, history: true, post: { id: id, title: title, content: content, created_at: created_at, modified_at: modified_at } });
             });
+            
 
             return postElement;
         }
@@ -155,8 +167,7 @@ async function showPage(page, data) {
         let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
         postPageCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
         postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
-        postPageNumber.innerText = "#" + id;
-        postViewId = parseInt(id);
+        postViewId = id;
     }
 
     function populateEditPage(id, title, content) {
@@ -244,7 +255,7 @@ async function showPage(page, data) {
 
 /**
  * Fetches a post's info from the server using a post ID.
- * @param {Number} id The post ID to be fetched.
+ * @param {String} id The post ID to be fetched.
  * @returns {JSON} A JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
  */
 async function getPost(id) {

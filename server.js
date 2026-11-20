@@ -21,6 +21,8 @@ if (randomCommand != "") {
     });
 }
 
+// TODO: Post IDs are randomly generated strings
+
 /**
  * Loads the SQLite database.
  * @param {String} fileName The filename to load the database from.
@@ -31,10 +33,11 @@ async function loadDatabase(fileName) {
 
     const createTable1 = `
     CREATE TABLE IF NOT EXISTS posts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    number INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
+    id TEXT NOT NULL UNIQUE,
     type INTEGER NOT NULL,
     title TEXT NOT NULL,
-    content TEXT NOT NULL,
+    content TEXT,
     created_at TEXT NOT NULL,
     modified_at TEXT NOT NULL
     )
@@ -80,15 +83,50 @@ function getPostCount() {
         db.get("SELECT COUNT() FROM posts", (err, count) => {
             if (err) {
                 console.error(err.message);
-                reject(err);
+                return reject(err);
             }
 
             let parsedCount = parseInt(count["COUNT()"]);
             resolve(parsedCount);
         });
     });
+}
 
+/**
+ * Generates a unique post ID that is not in use by any other post.
+ */
+async function generatePostId() {
 
+    let id = "";
+    let letters = ["a", "b", "c", "d", "e", "f"];
+    let valid = false;
+    let tries = 0;
+
+    while (!valid && tries < 100) {
+        for (let i = 0; i < 6; i++) {
+            let char = Math.floor(Math.random() * 16);
+            if (char > 9) {
+                char = letters[char - 10];
+            }
+            id += char;
+        }
+
+        valid = await new Promise((resolve, reject) => {
+            db.get("SELECT * FROM posts WHERE id = ?", [id], (err, row) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                if (row) {
+                    resolve(false);
+                } else {
+                    resolve(true);
+                }
+            })
+        });
+    }
+
+    return id;
 }
 
 /**
@@ -98,19 +136,23 @@ function getPostCount() {
  * @param {String} content The content of the post.
  * @returns {Promise} A Promise that will either resolve to the newly created post or an error message if the creation fails.
  */
-function createPost(type, title, content) {
+async function createPost(type, title, content) {
 
     let time = Date.now();
+    let id = await generatePostId();
+    console.log(id);
 
     return new Promise((resolve, reject) => {
-        db.get("INSERT INTO posts (type, title, content, created_at, modified_at) VALUES (?, ?, ?, ?, ?) RETURNING *", [type, title, content, time, time], (err, row) => {
+        db.get("INSERT INTO posts (id, type, title, content, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING *", [id, type, title, content, time, time], (err, row) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
 
-            console.log("Created new post with ID " + row.id);
-
             resolve(row);
+
+            console.log(row);
+
+            console.log("Created new post with ID " + row.id);
         });
     });
 }
@@ -127,9 +169,9 @@ function modifyPost(id, type, title, content) {
     let time = Date.now();
 
     return new Promise((resolve, reject) => {
-        db.get("UPDATE posts SET type = ?, title = ?, content = ?, modified_at = ? WHERE rowid = ? RETURNING *", [type, title, content, time, id], (err, row) => {
+        db.get("UPDATE posts SET type = ?, title = ?, content = ?, modified_at = ? WHERE id = ? RETURNING *", [type, title, content, time, id], (err, row) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
 
             resolve(row);
@@ -137,31 +179,37 @@ function modifyPost(id, type, title, content) {
     });
 }
 
+// TODO: Rewrite this with the new IDs and numbers
+
 /**
  * Deletes a post from the database.
- * @param {Number} id The post ID to be deleted.
+ * @param {String} id The post ID to be deleted.
  * @returns {Promise} A Promise that will either resolve to the deleted post or an error message if the delete fails.
  */
 async function deletePost(id) {
 
-    id = parseInt(id);
+    console.log("Deleting post iwth id" + id);
+
     postCount = await getPostCount();
 
     return new Promise((resolve, reject) => {
 
         // Delete the post
-        db.get("DELETE FROM posts WHERE rowid = ? RETURNING *", [id], async (err, row) => {
+        db.get("DELETE FROM posts WHERE id = ? RETURNING *", [id], async (err, row) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
 
+            console.log(row);
+
             // Reindex post IDs
-            for (let i = (id + 1); i <= postCount; i++) {
+            for (let i = (row.number + 1); i <= postCount; i++) {
 
                 await new Promise((resolve, reject) => {
-                    db.get("UPDATE posts SET id = ? WHERE id = ? RETURNING *", [i - 1, i], (err, row) => {
+                    console.log(`UPDATE posts SET number = ${i-1} WHERE number = ${i} RETURNING *`);
+                    db.get("UPDATE posts SET number = ? WHERE number = ? RETURNING *", [i - 1, i], (err, row) => {
                         if (err) {
-                            reject(err);
+                            return reject(err);
                         }
 
                         resolve(row);
@@ -172,7 +220,7 @@ async function deletePost(id) {
             // Update the row count
             db.run("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [postCount - 1, "posts"], (err) => {
                 if (err) {
-                    reject(err);
+                    return reject(err);
                 }
             });
 
@@ -204,6 +252,11 @@ app.put("/api/edit/:postid", async (req, res) => {
 });
 
 app.delete("/api/delete/:postid", async (req, res) => {
+
+    let deletedPost = await deletePost(req.params.postid);
+    res.send(deletedPost.id);
+
+    /*
     try {
         let deletedPost = await deletePost(req.params.postid);
         res.send(deletedPost.id);
@@ -211,10 +264,11 @@ app.delete("/api/delete/:postid", async (req, res) => {
         res.send(false);
         console.error(err.message);
     }
+        */
 });
 
 app.get("/api/post/:postid", (req, res) => {
-    db.get("SELECT id, title, content, created_at, modified_at FROM posts WHERE rowid = ?", [req.params.postid], (err, row) => {
+    db.get("SELECT id, title, content, created_at, modified_at FROM posts WHERE id = ?", [req.params.postid], (err, row) => {
         if (err) {
             return console.error(err.message);
         }
@@ -299,5 +353,6 @@ app.listen(PORT, async function () {
         console.log("An error occured when loading databases: " + dbStatus.message);
         return;
     }
+
     console.log(`Server is online at 127.0.0.1:${PORT}`);
 });
