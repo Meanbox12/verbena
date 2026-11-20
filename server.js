@@ -35,8 +35,6 @@ async function loadDatabase(fileName) {
     type INTEGER NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
-    year INTEGER NOT NULL,
-    month INTEGER NOT NULL,
     created_at TEXT NOT NULL,
     modified_at TEXT NOT NULL
     )
@@ -139,8 +137,6 @@ function modifyPost(id, type, title, content) {
     });
 }
 
-// TODO: Redesign post sorting so that they're sorted by year, month, and title
-
 /**
  * Deletes a post from the database.
  * @param {Number} id The post ID to be deleted.
@@ -229,47 +225,6 @@ app.get("/api/post/:postid", (req, res) => {
             res.send("Invalid post.");
         }
     });
-});
-
-// Check if the request is for a post
-app.use("/:year/:month/:name", async (req, res, next) => {
-
-    let year;
-    let month;
-
-    year = parseFloat(req.params.year);
-    if (!Number.isInteger(year)) {
-        next();
-        return;
-    }
-
-    month = parseFloat(req.params.month);
-    if (!Number.isInteger(month) || month > 12 || month < 1) {
-        next();
-        return;
-    }
-
-    console.log(`Year: ${req.params.year}. Month: ${req.params.month}. Name: ${req.params.name}.`);
-
-    // Search to see if that post exists
-    await new Promise((resolve, reject) => {
-        db.get("SELECT * FROM posts WHERE (year = ? AND month = ? AND title = ? COLLATE nocase)", [year, month, req.params.name], (err, row) => {
-            if (err) {
-                reject(err);
-            }
-
-            console.log(row);
-
-            if (row) {
-                res.json(row);
-                resolve(row);
-            } else {
-                reject("Requested post was not found.");
-            }
-        });
-    });
-
-    next();
 });
 
 app.get("/api/posts", (req, res) => {

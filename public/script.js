@@ -153,8 +153,8 @@ async function showPage(page, data) {
         postPageContent.innerHTML = parseMarkdown(content);
         let creationDate = new Date(Math.round(created_at)).toLocaleString();
         let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
-        postPageCreated.innerText = "Created on " + (creationDate == "Invalid Date" ?  + created_at : creationDate);
-        postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ?  + modified_at : modifiedDate);
+        postPageCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
+        postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
         postPageNumber.innerText = "#" + id;
         postViewId = parseInt(id);
     }
@@ -243,7 +243,7 @@ async function showPage(page, data) {
 // TODO: Add the state setting as another option for this
 
 /**
- * Fetches a post's info from the server.
+ * Fetches a post's info from the server using a post ID.
  * @param {Number} id The post ID to be fetched.
  * @returns {JSON} A JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
  */
