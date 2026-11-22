@@ -20,6 +20,8 @@ const postPageRaw = document.getElementById("post-page-raw");
 const postPageEdit = document.getElementById("post-page-edit");
 const postPageDelete = document.getElementById("post-page-delete");
 
+const editPageInputs = document.getElementById("edit-page-inputs");
+const editPageInputsOpen = document.getElementById("edit-page-inputs-open");
 const editPageTitle = document.getElementById("edit-page-title");
 const editPageReturn = document.getElementById("edit-page-return");
 const editPageIdInput = document.getElementById("edit-page-id-input");
@@ -27,8 +29,19 @@ const editPageTitleInput = document.getElementById("edit-page-title-input");
 const editPageContentInput = document.getElementById("edit-page-content-input");
 const editPageSave = document.getElementById("edit-page-save");
 const editPageNotice = document.getElementById("edit-page-notice");
-const editPagePreviewTitle = document.getElementById("edit-page-preview-title");
+
+const editPageUpload = document.getElementById("edit-page-upload");
+const editPageUploadOpen = document.getElementById("edit-page-upload-open");
+const editPageUploadInput = document.getElementById("edit-page-upload-input");
+const editPageUploadSave = document.getElementById("edit-page-upload-save");
+const editPageUploadResponse = document.getElementById("edit-page-upload-response");
+const editPageUploadCode = document.getElementById("edit-page-upload-code");
+const editPageUploadPreview = document.getElementById("edit-page-upload-preview");
+
 const editPagePreview = document.getElementById("edit-page-preview");
+const editPagePreviewOpen = document.getElementById("edit-page-preview-open");
+const editPagePreviewTitle = document.getElementById("edit-page-preview-title");
+const editPagePreviewContainer = document.getElementById("edit-page-preview-container");
 
 const errorPageText = document.getElementById("error-page-text");
 const errorPageReturn = document.getElementById("error-page-return");
@@ -56,7 +69,7 @@ function parseMarkdown(markdown) {
         return marked.parse(markdown);
     } else {
         // Faithful markdown follows the markdown syntax exactly, but turning it off makes newlines work properly
-        let editedMarkdown = markdown.replaceAll("\n", "  \n");
+        let editedMarkdown = markdown.replaceAll("\n", "  \n\n");
         return marked.parse(editedMarkdown);
     }
 }
@@ -184,7 +197,6 @@ async function showPage(page, data) {
 
         listPage.style.display = "block";
 
-        console.log(previousScroll);
         if (previousScroll != 0) {
             window.scroll(0, previousScroll);
             previousScroll = 0;
@@ -224,7 +236,7 @@ async function showPage(page, data) {
     // Edit Page
     else if (page == 3) {
         hideAllPages();
-        editPage.style.display = "flex";
+        editPage.style.display = "block";
 
         if (data && data.post) {
             populateEditPage(data.post.id, data.post.title, data.post.content);
@@ -236,7 +248,7 @@ async function showPage(page, data) {
         }
 
         if (editPageContentInput.value != "") {
-            editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
+            editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
         }
 
         if (data && data.history) {
@@ -351,11 +363,21 @@ editPageReturn.addEventListener("click", function () {
 });
 
 editPageTitleInput.addEventListener("input", function () {
-    editPagePreviewTitle.innerText = editPageTitleInput.value;
+    let value = editPageTitleInput.value;
+    if (value == "") {
+        editPagePreviewTitle.innerText = "Post Preview";
+    } else {
+        editPagePreviewTitle.innerText = editPageTitleInput.value;
+    }
 });
 
 editPageContentInput.addEventListener("input", function () {
-    editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
+    let value = editPageContentInput.value;
+    if (value == "") {
+        editPagePreviewContainer.innerText = "Type something...";
+    } else {
+        editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
+    }
 });
 
 errorPageReturn.addEventListener("click", function () {
@@ -388,9 +410,72 @@ postPageDelete.addEventListener("click", async function () {
     }
 });
 
+editPageUploadOpen.addEventListener("click", function () {
+    if (editPageUpload.style.display == "none") {
+        editPageUpload.style.display = "block";
+    } else {
+        editPageUpload.style.display = "none";
+    }
+});
+
+editPagePreviewOpen.addEventListener("click", function () {
+    if (editPagePreview.style.display == "none") {
+        editPagePreview.style.display = "block";
+    } else {
+        editPagePreview.style.display = "none";
+    }
+})
+
+editPageInputsOpen.addEventListener("click", function () {
+    if (editPageInputs.style.display == "none") {
+        editPageInputs.style.display = "block";
+    } else {
+        editPageInputs.style.display = "none";
+    }
+});
+
+editPageUploadSave.addEventListener("click", async function () {
+
+    if (!editPageUploadInput.files[0]) {
+
+    }
+
+    let formData = new FormData();
+    formData.append("file", editPageUploadInput.files[0]);
+
+    let response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData
+    });
+
+    if (response.status == 201) {
+        let resText = await response.text();
+        let imageCode = `<img src="${resText}">`;
+
+        editPageUploadResponse.innerText = "Uploaded the file.";
+        editPageUploadCode.innerText = imageCode;
+        editPageUploadPreview.setAttribute("src", resText);
+        editPageUploadPreview.style.display = "block";
+
+    } else if (response.status == 200) {
+        let resText = await response.text();
+        let imageCode = `<img src="${resText}">`;
+
+        editPageUploadResponse.innerText = "File is already on the server.";
+        editPageUploadCode.innerText = imageCode;
+        editPageUploadPreview.setAttribute("src", resText);
+        editPageUploadPreview.style.display = "block";
+
+    } else if (response.status == 400 || response.status == 500) {
+        editPageUploadCode.innerText = "An error occured when uploading the file.\n" + await response.text();
+    } else {
+        editPageUploadCode.innerText = "An unknown error occurred. Please try again later.";
+    }
+});
+
 editPageSave.addEventListener("click", async function () {
 
-    editPagePreview.innerHTML = parseMarkdown(editPageContentInput.value);
+    editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
 
     let editing = false;
     let response;
@@ -418,13 +503,13 @@ editPageSave.addEventListener("click", async function () {
 
         let responseText = await response.text();
 
-        if (responseText != "false") {
+        if (response.status == 201) {
             window.location.href = "/post/" + responseText;
         } else {
-            editPageNotice.innerText = "An error occured when creating the post.";
+            editPageNotice.innerText = "An error occured when creating the post.\n" + responseText;
         }
     } else {
-        editPageNotice.innerText = "An error occured when creating the post.";
+        editPageNotice.innerText = "An unknown error occured when creating the post.";
     }
 });
 

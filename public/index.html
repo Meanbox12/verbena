@@ -4,7 +4,7 @@
 <head>
     <title>Verbena</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-    <link rel="icon" type="image/x-icon" href="/assets/duck.jpg">
+    <!-- <link rel="icon" type="image/x-icon" href="/assets/duck.jpg"> -->
 </head>
 
 <link href="https://fonts.cdnfonts.com/css/br-segma" rel="stylesheet">
@@ -71,30 +71,65 @@
             </div>
 
             <div id="edit-page" class="page" style="display: none;">
-                <div id="edit-page-left">
+
+                <div id="edit-page-header">
                     <button class="normal-text text-button" id="edit-page-return">Return</button>
-
-                    <p class="large-text page-title" id="edit-page-title">Post Editor</p>
-
-                    <label class="small-text" for="edit-page-id-input">Post ID to Edit</label>
-                    <input class="small-text" id="edit-page-id-input" placeholder="Type something...">
-
-                    <label class="normal-text" for="edit-page-title-input">Title</label>
-                    <input class="large-text" id="edit-page-title-input" placeholder="Type something...">
-
-                    <label class="normal-text" for="edit-page-content-input">Content</label>
-                    <textarea class="normal-text" id="edit-page-content-input"
-                        placeholder="Type something..."></textarea>
-
-                    <button class="large-text text-button" id="edit-page-save">Save</button>
-
-                    <p class="normal-text" id="edit-page-notice"></p>
+                    <div>
+                        <button id="edit-page-inputs-open" class="normal-text text-button">Editor</button>
+                        <button id="edit-page-preview-open" class="normal-text text-button">Preview</button>
+                        <button id="edit-page-upload-open" class="normal-text text-button">Uploads</button>
+                    </div>
                 </div>
 
-                <div id="edit-page-right">
-                    <p class="large-text page-title" id="edit-page-preview-title">Preview will appear here...</p>
-                    <hr>
-                    <p id="edit-page-preview" class="post-markdown-container"></p>
+                <div id="edit-page-inner">
+
+                    <div id="edit-page-inputs">
+
+                        <p class="large-text page-title" id="edit-page-title">Post Editor</p>
+
+                        <hr>
+
+                        <label class="small-text" for="edit-page-id-input">Post ID to Edit</label>
+                        <input class="small-text" id="edit-page-id-input" placeholder="Type something...">
+
+                        <label class="normal-text" for="edit-page-title-input">Title</label>
+                        <input class="large-text" id="edit-page-title-input" placeholder="Type something...">
+
+                        <label class="normal-text" for="edit-page-content-input">Content</label>
+                        <textarea class="normal-text" id="edit-page-content-input"
+                            placeholder="Type something..."></textarea>
+
+
+
+                        <button class="large-text text-button" id="edit-page-save">Save</button>
+
+                        <p class="code-text" id="edit-page-notice"></p>
+                    </div>
+
+                    <div id="edit-page-preview">
+                        <p class="large-text page-title" id="edit-page-preview-title">Post Preview</p>
+                        <hr>
+                        <p id="edit-page-preview-container" class="post-markdown-container">Type something...</p>
+                    </div>
+
+                    <!-- TODO: Redesign this whole page -->
+                    <div id="edit-page-upload" style="display: none;">
+                        <!-- TODO: Only accept image / media files -->
+                        <!-- TODO: Either add a way to play videos or don't allow them to be uploaded -->
+                        <p class="large-text page-title">Upload a File</p>
+                        <hr>
+                        <p class="normal-text">After uploading a file, copy the displayed code into your post's content
+                            to add the file into the post.</p>
+                        <label class="normal-text page-title" for="edit-page-upload-input">Choose a File:</label>
+                        <input class="normal-text" id="edit-page-upload-input" type="file">
+                        <button class="normal-text text-button" id="edit-page-upload-save">Upload</button>
+                        <div>
+                            <p class="normal-text" id="edit-page-upload-response"></p>
+                            <code class="code-text" id="edit-page-upload-code"></code>
+                            <img alt="Uploaded File" id="edit-page-upload-preview" style="display: none;">
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -107,7 +142,7 @@
     </div>
 
     <div id="image-viewer" style="display: none;">
-        <img class="viewer-image" alt="Alt Text" title="Alt Text" src="/assets/placeholder.png">
+        <img class="viewer-image" alt="Alt Text" title="Alt Text">
         <p class="image-viewer-text">Alt Text</p>
         <small class="image-viewer-instructions">Click anywhere to close</small>
     </div>

@@ -5,7 +5,7 @@ const path = require("node:path");
 const fs = require("node:fs");
 
 const app = express();
-const upload = multer({dest: "public/uploads/temp/"});
+const upload = multer({ dest: "public/uploads/temp/" });
 let db;
 
 const PORT = 4000;
@@ -229,12 +229,15 @@ async function deletePost(id) {
 
 app.post("/api/create", async (req, res) => {
     try {
+        if (!req.body.title || req.body.title == "") {
+            res.status(400).send("Post title cannot be empty.");
+            return;
+        }
         let createdPost = await createPost(req.body.type, req.body.title, req.body.content);
         postCount = await getPostCount();
-        res.send(createdPost.id);
+        res.status(201).send(createdPost.id);
     } catch (err) {
-        res.send(false);
-        console.error(err.message);
+        res.status(500).send(err.message);
     }
 });
 
@@ -345,20 +348,30 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
         return hashHex;
     }
 
-    let originalName = req.file.originalname;
-    let originalNameParts = originalName.split(".");
-    let extension = originalNameParts[originalNameParts.length - 1];
+    try {
 
-    let parsedFile = fs.readFileSync(req.file.path);
+        if (!req.file) {
+            res.status(400).send("Server did not recieve a file.");
+            return;
+        }
 
-    let fileHash = await hash(parsedFile);
+        let originalName = req.file.originalname;
+        let originalNameParts = originalName.split(".");
+        let extension = originalNameParts[originalNameParts.length - 1];
 
-    if (fs.readdirSync("public/uploads").some(item => item.includes(fileHash))) {
-        fs.unlinkSync(req.file.path);
-        res.sendStatus(200);
-    } else {
-        fs.renameSync(req.file.path, "public/uploads/" + fileHash + "." + extension);
-        res.sendStatus(201);
+        let parsedFile = fs.readFileSync(req.file.path);
+
+        let fileHash = await hash(parsedFile);
+
+        if (fs.readdirSync("public/uploads").some(item => item.includes(fileHash))) {
+            fs.unlinkSync(req.file.path);
+            res.status(200).send("/uploads/" + fileHash + "." + extension);
+        } else {
+            fs.renameSync(req.file.path, "public/uploads/" + fileHash + "." + extension);
+            res.status(201).send("/uploads/" + fileHash + "." + extension);
+        }
+    } catch (err) {
+        res.status(500).send(err.message);
     }
 });
 
