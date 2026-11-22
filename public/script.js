@@ -503,7 +503,7 @@ editPageSave.addEventListener("click", async function () {
 
         let responseText = await response.text();
 
-        if (response.status == 201) {
+        if (response.status == 200 || response.status == 201) {
             window.location.href = "/post/" + responseText;
         } else {
             editPageNotice.innerText = "An error occured when creating the post.\n" + responseText;

@@ -271,12 +271,12 @@ hr {
     word-wrap: break-word;
     gap: 20px;
     max-width: 100%;
-    overflow: scroll;
 }
 
 #edit-page-inner>div {
-    max-width: 100%;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 #edit-page-inputs>label,
@@ -285,18 +285,15 @@ hr {
     margin-top: 20px;
 }
 
-#edit-page-title-input {
-    width: 100%;
-}
-
 #edit-page-inputs>button {
     display: block;
     margin-top: 20px;
 }
 
-#edit-page-upload-input {
-    max-width: 75%;
-    margin-right: 20px;
+#edit-page-upload-preview {
+    border-radius: var(--corner-rounding);
+    max-width: 50%;
+    max-height: 100vh;
 }
 
 label {
@@ -358,8 +355,8 @@ label {
 
 .post-markdown-container>img {
     border-radius: var(--corner-rounding);
-    width: 100%;
     max-width: 50vw;
+    max-height: 100vh;
 }
 
 #image-viewer {

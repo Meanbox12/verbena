@@ -244,10 +244,9 @@ app.post("/api/create", async (req, res) => {
 app.put("/api/edit/:postid", async (req, res) => {
     try {
         let editedPost = await modifyPost(req.body.id, req.body.type, req.body.title, req.body.content);
-        res.send(editedPost.id);
+        res.status(200).send(editedPost.id);
     } catch (err) {
-        res.send(false);
-        console.error(err.message);
+        res.status(500).send(err.message);
     }
 });
 
