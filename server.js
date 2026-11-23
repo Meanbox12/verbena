@@ -173,13 +173,23 @@ function modifyPost(id, type, title, content) {
     let time = Date.now();
 
     return new Promise((resolve, reject) => {
-        db.get("UPDATE posts SET type = ?, title = ?, content = ?, modified_at = ? WHERE id = ? RETURNING *", [type, title, content, time, id], (err, row) => {
-            if (err) {
-                return reject(err);
-            }
+        if (id == "sidebar") {
+            db.get("UPDATE info SET content = ? WHERE id = 4 RETURNING *", [content], (err, row) => {
+                if (err) {
+                    return reject(err);
+                }
 
-            resolve(row);
-        });
+                resolve(row);
+            });
+        } else {
+            db.get("UPDATE posts SET type = ?, title = ?, content = ?, modified_at = ? WHERE id = ? RETURNING *", [type, title, content, time, id], (err, row) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                resolve(row);
+            });
+        }
     });
 }
 

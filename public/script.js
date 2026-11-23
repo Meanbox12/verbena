@@ -2,7 +2,10 @@ const postPage = document.getElementById("post-page");
 const listPage = document.getElementById("list-page");
 const editPage = document.getElementById("edit-page");
 const errorPage = document.getElementById("error-page");
-const sidebar = document.getElementById("sidebar-links-container");
+const sidebar = document.getElementById("sidebar-post-container");
+
+const imageViewer = document.getElementById("image-viewer");
+const viewerImage = document.getElementById("viewer-image");
 
 const headerLogo = document.getElementById("header-logo");
 const headerLogoLink = document.getElementById("header-logo-link");
@@ -25,6 +28,7 @@ const editPageInputsOpen = document.getElementById("edit-page-inputs-open");
 const editPageTitle = document.getElementById("edit-page-title");
 const editPageReturn = document.getElementById("edit-page-return");
 const editPageIdInput = document.getElementById("edit-page-id-input");
+const editPageLoad = document.getElementById("edit-page-load");
 const editPageTitleInput = document.getElementById("edit-page-title-input");
 const editPageContentInput = document.getElementById("edit-page-content-input");
 const editPageSave = document.getElementById("edit-page-save");
@@ -74,6 +78,11 @@ function parseMarkdown(markdown) {
         let editedMarkdown = markdown.replaceAll("\n", "  \n");
         return marked.parse(editedMarkdown);
     }
+}
+
+function showImageViewer(image) {
+    imageViewer.style.display = "flex";
+    viewerImage.setAttribute("src", image.src);
 }
 
 /**
@@ -162,6 +171,16 @@ async function showPage(page, data) {
             listPage.appendChild(postElement);
             listPage.appendChild(document.createElement("hr"));
         }
+        
+        let images = listPage.getElementsByTagName("img");
+
+        for (let i = 0; i < images.length; i++) {
+            images[i].addEventListener("click", function() {
+                showImageViewer(images[i]);
+            });
+
+            images[i].style.cursor = "pointer";
+        }
     }
 
     /**
@@ -236,12 +255,19 @@ async function showPage(page, data) {
     }
 
     // Edit Page
+    // TODO: Find a better way of determining whether the post is the sidebar
     else if (page == 3) {
         hideAllPages();
         editPage.style.display = "block";
 
+        console.log(data.post);
+
         if (data && data.post) {
-            populateEditPage(data.post.id, data.post.title, data.post.content);
+            if (!data.post.title) {
+                populateEditPage("sidebar", "Sidebar", data.post.content);
+            } else {
+                populateEditPage(data.post.id, data.post.title, data.post.content);
+            }
         }
 
         // TODO: Call this somewhere else
@@ -255,7 +281,7 @@ async function showPage(page, data) {
 
         if (data && data.history) {
             let object = { "page": 3 }
-            window.history.pushState(object, "", "/edit" + (data.post ? "?post=" + data.post.id : ""));
+            window.history.pushState(object, "", "/edit" + (data.post ? "?post=" + (data.post.title ? data.post.id : "sidebar") : ""));
         }
     }
 
@@ -278,7 +304,14 @@ async function showPage(page, data) {
  * @returns {JSON} A JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
  */
 async function getPost(id) {
-    let postRaw = await fetch("/api/post/" + id);
+
+    let postRaw;
+
+    if (id == "sidebar") {
+        postRaw = await fetch("/api/info/4");
+    } else {
+        postRaw = await fetch("/api/post/" + id);
+    }
 
     let type = postRaw.headers.get("content-type");
 
@@ -323,7 +356,7 @@ async function populateHeader() {
 async function populateSidebar() {
     let sidebarPost = await (await fetch("/api/info/4")).json();
 
-    sidebar.innerHTML = sidebarPost.content;
+    sidebar.innerHTML = parseMarkdown(sidebarPost.content);
 }
 
 // Event Listeners
@@ -362,6 +395,17 @@ postPageEdit.addEventListener("click", async function () {
 // TODO: Make this return button go back to the post page if the Edit button was clicked
 editPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
+});
+
+editPageLoad.addEventListener("click", async function () {
+    if (editPageIdInput.value != "") {
+        try {
+            showPage(3, { populate: true, history: false, post: await getPost(editPageIdInput.value) });
+        } catch (err) {
+            console.error(err.message);
+            editPageIdInput.value = "";
+        }
+    }
 });
 
 editPageTitleInput.addEventListener("input", function () {
@@ -510,11 +554,9 @@ editPageSave.addEventListener("click", async function () {
 
     editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
 
-    let editing = false;
     let response;
 
     if (editPageIdInput.value != "") {
-        editing = true;
         response = await fetch("/api/edit/" + editPageIdInput.value, {
             method: "PUT",
             headers: {
@@ -537,7 +579,11 @@ editPageSave.addEventListener("click", async function () {
         let responseText = await response.text();
 
         if (response.status == 200 || response.status == 201) {
-            window.location.href = "/post/" + responseText;
+            if (editPageIdInput.value == "sidebar") {
+                window.location.href = "/";
+            } else {
+                window.location.href = "/post/" + responseText;
+            }
         } else {
             editPageNotice.innerText = "An error occured when creating the post.\n" + responseText;
         }
@@ -545,6 +591,10 @@ editPageSave.addEventListener("click", async function () {
         editPageNotice.innerText = "An unknown error occured when creating the post.";
     }
 });
+
+imageViewer.addEventListener("click", function() {
+    imageViewer.style.display = "none";
+})
 
 // When the browser forward and back buttons are pressed
 onpopstate = async function (event) {

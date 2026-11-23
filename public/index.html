@@ -30,7 +30,7 @@
 
     <div id="page">
         <div id="sidebar">
-            <div id="sidebar-links-container"></div>
+            <div id="sidebar-post-container" class="post-markdown-container"></div>
         </div>
 
         <div id="content">
@@ -63,12 +63,6 @@
                 <hr>
 
                 <p class="post-markdown-container" id="post-page-content"></p>
-                <!--
-                    <div class="post-image-container">
-                    <img class="post-image" src="/assets/duck.jpg" alt="Alt Text" title="Alt Text">
-                    <img class="post-image" src="/assets/placeholder.png" alt="Alt Text" title="Alt Text">
-                    </div>
-                    -->
             </div>
 
             <div id="edit-page" class="page" style="display: none;">
@@ -92,6 +86,7 @@
 
                         <label class="small-text" for="edit-page-id-input">Post ID to Edit</label>
                         <input class="small-text" id="edit-page-id-input" placeholder="Type something...">
+                        <button class="small-text text-button" id="edit-page-load">Load</button>
 
                         <label class="normal-text" for="edit-page-title-input">Title</label>
                         <input class="large-text" id="edit-page-title-input" placeholder="Type something...">
@@ -149,9 +144,9 @@
     </div>
 
     <div id="image-viewer" style="display: none;">
-        <img class="viewer-image" alt="Alt Text" title="Alt Text">
-        <p class="image-viewer-text">Alt Text</p>
-        <small class="image-viewer-instructions">Click anywhere to close</small>
+        <img id="viewer-image" class="viewer-image" alt="Alt Text" title="Alt Text">
+        <p class="large-text image-viewer-text">Alt Text</p>
+        <small class="normal-text image-viewer-text">Click anywhere to close</small>
     </div>
 </body>
 
