@@ -4,7 +4,8 @@
 <head>
     <title>Verbena</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-    <!-- <link rel="icon" type="image/x-icon" href="/assets/duck.jpg"> -->
+    <link rel="icon" type="image/x-icon"
+        href="/uploads/3a5b1f8d689aac9859fca0d79d17e2e78d69ee87deeff4d669f3088a8ad6ee3f.ico">
 </head>
 
 <link href="https://fonts.cdnfonts.com/css/br-segma" rel="stylesheet">
@@ -120,14 +121,20 @@
                         <hr>
                         <p class="normal-text">You can upload files to the server here. After uploading an image file,
                             copy the displayed code to add the image into your post.</p>
-                        <label class="normal-text page-title" for="edit-page-upload-input">Choose a File:</label>
-                        <input class="normal-text" id="edit-page-upload-input" type="file">
+                        <label id="edit-page-upload-zone" class="normal-text" for="edit-page-upload-input">Drop files here, or
+                            <input class="normal-text" id="edit-page-upload-input" type="file"></label>
                         <button class="normal-text text-button" id="edit-page-upload-save">Upload</button>
                         <div>
                             <p class="normal-text" id="edit-page-upload-response"></p>
                             <code class="code-text" id="edit-page-upload-code"></code>
                             <img alt="Uploaded File" id="edit-page-upload-preview" style="display: none;">
                         </div>
+                    </div>
+
+                    <div id="edit-page-empty" style="display: none;">
+                        <p class="large-text page-title">It's a bit empty here...</p>
+                        <hr>
+                        <p class="normal-text">You can use the buttons at the top-right to open a section.</p>
                     </div>
 
                 </div>

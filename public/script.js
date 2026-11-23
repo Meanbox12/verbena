@@ -30,6 +30,11 @@ const editPageContentInput = document.getElementById("edit-page-content-input");
 const editPageSave = document.getElementById("edit-page-save");
 const editPageNotice = document.getElementById("edit-page-notice");
 
+const editPagePreview = document.getElementById("edit-page-preview");
+const editPagePreviewOpen = document.getElementById("edit-page-preview-open");
+const editPagePreviewTitle = document.getElementById("edit-page-preview-title");
+const editPagePreviewContainer = document.getElementById("edit-page-preview-container");
+
 const editPageUpload = document.getElementById("edit-page-upload");
 const editPageUploadOpen = document.getElementById("edit-page-upload-open");
 const editPageUploadInput = document.getElementById("edit-page-upload-input");
@@ -38,10 +43,7 @@ const editPageUploadResponse = document.getElementById("edit-page-upload-respons
 const editPageUploadCode = document.getElementById("edit-page-upload-code");
 const editPageUploadPreview = document.getElementById("edit-page-upload-preview");
 
-const editPagePreview = document.getElementById("edit-page-preview");
-const editPagePreviewOpen = document.getElementById("edit-page-preview-open");
-const editPagePreviewTitle = document.getElementById("edit-page-preview-title");
-const editPagePreviewContainer = document.getElementById("edit-page-preview-container");
+const editPageEmpty = document.getElementById("edit-page-empty");
 
 const errorPageText = document.getElementById("error-page-text");
 const errorPageReturn = document.getElementById("error-page-return");
@@ -69,7 +71,7 @@ function parseMarkdown(markdown) {
         return marked.parse(markdown);
     } else {
         // Faithful markdown follows the markdown syntax exactly, but turning it off makes newlines work properly
-        let editedMarkdown = markdown.replaceAll("\n", "  \n\n");
+        let editedMarkdown = markdown.replaceAll("\n", "  \n");
         return marked.parse(editedMarkdown);
     }
 }
@@ -410,43 +412,74 @@ postPageDelete.addEventListener("click", async function () {
     }
 });
 
-editPageUploadOpen.addEventListener("click", function () {
-    if (editPageUpload.style.display == "none") {
-        editPageUpload.style.display = "block";
-    } else {
-        editPageUpload.style.display = "none";
+function toggleEditPageModal(page) {
+
+    let pageElement;
+
+    switch (page) {
+        case 1:
+            pageElement = editPageInputs;
+            break;
+        case 2:
+            pageElement = editPagePreview;
+            break;
+        case 3:
+            pageElement = editPageUpload;
+            break;
     }
+
+    if (pageElement.style.display == "none") {
+        pageElement.style.display = "block";
+    } else {
+        pageElement.style.display = "none";
+    }
+
+    if (editPageInputs.style.display == "none" && editPagePreview.style.display == "none" && editPageUpload.style.display == "none") {
+        editPageEmpty.style.display = "block";
+    } else {
+        editPageEmpty.style.display = "none";
+    }
+
+}
+
+editPageInputsOpen.addEventListener("click", function () {
+    toggleEditPageModal(1);
 });
 
 editPagePreviewOpen.addEventListener("click", function () {
-    if (editPagePreview.style.display == "none") {
-        editPagePreview.style.display = "block";
-    } else {
-        editPagePreview.style.display = "none";
-    }
+    toggleEditPageModal(2);
 })
 
-editPageInputsOpen.addEventListener("click", function () {
-    if (editPageInputs.style.display == "none") {
-        editPageInputs.style.display = "block";
-    } else {
-        editPageInputs.style.display = "none";
-    }
+editPageUploadOpen.addEventListener("click", function () {
+    toggleEditPageModal(3);
 });
+
+/**
+ * Uploads a file to the server.
+ * @param {File} file 
+ * @returns The server's response.
+ */
+async function uploadFile(file) {
+    let response = await fetch("/api/upload", {
+        method: "POST",
+        body: file
+    });
+
+    console.log(response);
+
+    return response;
+}
 
 editPageUploadSave.addEventListener("click", async function () {
 
     if (!editPageUploadInput.files[0]) {
-
+        return;
     }
 
     let formData = new FormData();
     formData.append("file", editPageUploadInput.files[0]);
 
-    let response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData
-    });
+    let response = await uploadFile(formData);
 
     if (response.status == 201) {
         let resText = await response.text();
