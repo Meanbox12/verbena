@@ -85,17 +85,15 @@
                         <hr>
 
                         <label class="small-text" for="edit-page-id-input">Post ID to Edit</label>
-                        <input class="small-text" id="edit-page-id-input" placeholder="Type something...">
+                        <input class="small-text text-input" id="edit-page-id-input" placeholder="Type something...">
                         <button class="small-text text-button" id="edit-page-load">Load</button>
 
                         <label class="normal-text" for="edit-page-title-input">Title</label>
-                        <input class="large-text" id="edit-page-title-input" placeholder="Type something...">
+                        <input class="large-text text-input" id="edit-page-title-input" placeholder="Type something...">
 
                         <label class="normal-text" for="edit-page-content-input">Content</label>
-                        <textarea class="normal-text" id="edit-page-content-input"
+                        <textarea class="normal-text text-input" id="edit-page-content-input"
                             placeholder="Type something..."></textarea>
-
-
 
                         <button class="large-text text-button" id="edit-page-save">Save</button>
 
@@ -108,16 +106,20 @@
                         <p id="edit-page-preview-container" class="post-markdown-container">Type something...</p>
                     </div>
 
-                    <!-- TODO: Redesign this whole page -->
                     <div id="edit-page-upload" style="display: none;">
-                        <!-- TODO: Only accept image / media files -->
-                        <!-- TODO: Either add a way to play videos or don't allow them to be uploaded -->
                         <p class="large-text page-title">Files</p>
                         <hr>
                         <p class="normal-text">You can upload files to the server here. After uploading an image file,
                             copy the displayed code to add the image into your post.</p>
-                        <label id="edit-page-upload-zone" class="normal-text" for="edit-page-upload-input">Drop files here, or
-                            <input class="normal-text" id="edit-page-upload-input" type="file"></label>
+                        <label id="edit-page-upload-zone" class="normal-text" for="edit-page-upload-input">Drop files
+                            here, or
+                            <input class="normal-text" id="edit-page-upload-input" type="file" accept="image/png, image/jpeg, image/gif, image/svg+xml, image/webp, image/avif, image/x-icon">
+                        </label>
+
+                        <label for="edit-page-upload-alt" class="normal-text">Alt Text (Optional)
+                            <input id="edit-page-upload-alt" type="text" class="normal-text text-input">
+                        </label>
+
                         <button class="normal-text text-button" id="edit-page-upload-save">Upload</button>
                         <div>
                             <p class="normal-text" id="edit-page-upload-response"></p>

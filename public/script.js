@@ -47,6 +47,7 @@ const editPageUploadSave = document.getElementById("edit-page-upload-save");
 const editPageUploadResponse = document.getElementById("edit-page-upload-response");
 const editPageUploadCode = document.getElementById("edit-page-upload-code");
 const editPageUploadPreview = document.getElementById("edit-page-upload-preview");
+const editPageUploadAlt = document.getElementById("edit-page-upload-alt");
 
 const editPageEmpty = document.getElementById("edit-page-empty");
 
@@ -84,6 +85,9 @@ function parseMarkdown(markdown) {
 function showImageViewer(image) {
     imageViewer.style.display = "flex";
     imageViewerImage.setAttribute("src", image.src);
+    imageViewerImage.setAttribute("alt", image.alt);
+    imageViewerImage.setAttribute("title", image.alt);
+    imageViewerAlt.innerText = image.alt;
 }
 
 /**
@@ -201,6 +205,16 @@ async function showPage(page, data) {
         postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
         postPageId.innerText = id;
         postViewId = id;
+
+        let images = postPageContent.getElementsByTagName("img");
+
+        for (let i = 0; i < images.length; i++) {
+            images[i].addEventListener("click", function() {
+                showImageViewer(images[i]);
+            });
+
+            images[i].style.cursor = "pointer";
+        }
     }
 
     function populateEditPage(id, title, content) {
@@ -233,7 +247,6 @@ async function showPage(page, data) {
     // Post Page
     else if (page == 2) {
 
-        console.log(scrollY);
         previousScroll = scrollY;
 
         hideAllPages();
@@ -260,8 +273,6 @@ async function showPage(page, data) {
     else if (page == 3) {
         hideAllPages();
         editPage.style.display = "block";
-
-        console.log(data.post);
 
         if (data && data.post) {
             if (!data.post.title) {
@@ -427,6 +438,11 @@ editPageContentInput.addEventListener("input", function () {
     }
 });
 
+editPageUploadAlt.addEventListener("input", function() {
+    let imgCodeList = editPageUploadCode.innerText.split("\"");
+    editPageUploadCode.innerText = `<img src="${imgCodeList[1]}" alt="${editPageUploadAlt.value}">`;
+});
+
 errorPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
 });
@@ -510,8 +526,6 @@ async function uploadFile(file) {
         body: file
     });
 
-    console.log(response);
-
     return response;
 }
 
@@ -528,7 +542,8 @@ editPageUploadSave.addEventListener("click", async function () {
 
     if (response.status == 201) {
         let resText = await response.text();
-        let imageCode = `<img src="${resText}">`;
+        console.log(editPageUploadAlt.value);
+        let imageCode = `<img src="${resText}" alt="${editPageUploadAlt.value}">`;
 
         editPageUploadResponse.innerText = "Uploaded the file.";
         editPageUploadCode.innerText = imageCode;
@@ -537,7 +552,7 @@ editPageUploadSave.addEventListener("click", async function () {
 
     } else if (response.status == 200) {
         let resText = await response.text();
-        let imageCode = `<img src="${resText}">`;
+        let imageCode = `<img src="${resText}" alt="${editPageUploadAlt.value}">`;
 
         editPageUploadResponse.innerText = "File is already on the server.";
         editPageUploadCode.innerText = imageCode;
@@ -603,7 +618,6 @@ imageViewerAlt.addEventListener("click", function(event) {
 
 imageViewerImage.addEventListener("click", function(event) {
     event.stopPropagation();
-    window.open(imageViewerImage.getAttribute("src"), "_blank");
 });
 
 // When the browser forward and back buttons are pressed
