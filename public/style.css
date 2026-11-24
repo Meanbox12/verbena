@@ -399,10 +399,13 @@ label {
     color: white;
 }
 
-.viewer-image {
-    height: 50%;
+#image-viewer-image {
+    max-height: 75%;
+    height: auto;
     border-radius: var(--corner-rounding);
-    padding: 20px;
+    margin: 20px;
+    border: 2px solid white;
+    cursor: pointer;
 }
 
 /* Rule for small screens */

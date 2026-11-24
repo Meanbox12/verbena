@@ -5,7 +5,8 @@ const errorPage = document.getElementById("error-page");
 const sidebar = document.getElementById("sidebar-post-container");
 
 const imageViewer = document.getElementById("image-viewer");
-const viewerImage = document.getElementById("viewer-image");
+const imageViewerImage = document.getElementById("image-viewer-image");
+const imageViewerAlt = document.getElementById("image-viewer-alt");
 
 const headerLogo = document.getElementById("header-logo");
 const headerLogoLink = document.getElementById("header-logo-link");
@@ -82,7 +83,7 @@ function parseMarkdown(markdown) {
 
 function showImageViewer(image) {
     imageViewer.style.display = "flex";
-    viewerImage.setAttribute("src", image.src);
+    imageViewerImage.setAttribute("src", image.src);
 }
 
 /**
@@ -594,7 +595,16 @@ editPageSave.addEventListener("click", async function () {
 
 imageViewer.addEventListener("click", function() {
     imageViewer.style.display = "none";
-})
+});
+
+imageViewerAlt.addEventListener("click", function(event) {
+    event.stopPropagation();
+});
+
+imageViewerImage.addEventListener("click", function(event) {
+    event.stopPropagation();
+    window.open(imageViewerImage.getAttribute("src"), "_blank");
+});
 
 // When the browser forward and back buttons are pressed
 onpopstate = async function (event) {
