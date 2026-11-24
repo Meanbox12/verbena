@@ -73,16 +73,16 @@ body {
     cursor: pointer;
 }
 
-.text-input {
-    cursor: text;
-}
-
 .text-button:hover {
     background-color: var(--button-hover-color);
 }
 
 .text-button:active {
     background-color: var(--button-click-color);
+}
+
+.text-input {
+    cursor: text;
 }
 
 hr {
@@ -185,22 +185,6 @@ hr {
     text-decoration: underline;
 }
 
-/* TODO: Fix images copying each other's aspect ratios */
-/* TODO: Fix the image viewer on mobile devices */
-.post-image-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-    margin-bottom: 1%;
-}
-
-/* TODO: Show 2 images max and add a +(num) button for extras */
-.post-image {
-    width: 25%;
-    border-radius: var(--corner-rounding);
-    cursor: pointer;
-}
-
 #post-page-header {
     display: flex;
     flex-direction: row;
@@ -272,6 +256,7 @@ hr {
 }
 
 #edit-page-upload-zone {
+    cursor: pointer;
     padding: 20px;
     border: 2px solid var(--border-color);
     border-radius: var(--corner-rounding);

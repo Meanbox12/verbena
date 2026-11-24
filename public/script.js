@@ -13,6 +13,7 @@ const headerLogoLink = document.getElementById("header-logo-link");
 const headerTitle = document.getElementById("header-title");
 const headerSubtitle = document.getElementById("header-subtitle");
 const headerSearchbarLabel = document.getElementById("header-searchbar-label");
+const headerSearchbar = document.getElementById("header-searchbar");
 
 const postPageReturn = document.getElementById("post-page-return");
 const postPageTitle = document.getElementById("post-page-title");
@@ -56,8 +57,6 @@ const errorPageReturn = document.getElementById("error-page-return");
 
 let postViewId = "";
 let currentPost;
-// TODO: Update this variable more often
-let totalPosts = 0;
 let postViewType = 1;
 
 let previousScroll = 0;
@@ -82,6 +81,10 @@ function parseMarkdown(markdown) {
     }
 }
 
+/**
+ * Populates the Image Viewer with an image's information.
+ * @param {Element} image The image Element.
+ */
 function showImageViewer(image) {
     imageViewer.style.display = "flex";
     imageViewerImage.setAttribute("src", image.src);
@@ -109,9 +112,9 @@ async function showPage(page, data) {
 
     /**
      * Populates the List page with post elements.
-     * @param {Number} page [Currently unused] The page to load posts from.
+     * @param {JSON} posts A JSON objects containing the posts to be shown.
      */
-    async function populateListPage(page) {
+    async function populateListPage(posts) {
 
         /**
          * Creates a Element for a post.
@@ -166,9 +169,10 @@ async function showPage(page, data) {
             return postElement;
         }
 
+        //let postsRaw = await fetch("/api/posts");
+        //let posts = await postsRaw.json();
 
-        let postsRaw = await fetch("/api/posts");
-        let posts = await postsRaw.json();
+        listPage.innerHTML = "";
 
         for (let i = posts.length - 1; i >= 0; i--) {
             let postObject = posts[i];
@@ -176,11 +180,11 @@ async function showPage(page, data) {
             listPage.appendChild(postElement);
             listPage.appendChild(document.createElement("hr"));
         }
-        
+
         let images = listPage.getElementsByTagName("img");
 
         for (let i = 0; i < images.length; i++) {
-            images[i].addEventListener("click", function() {
+            images[i].addEventListener("click", function () {
                 showImageViewer(images[i]);
             });
 
@@ -209,7 +213,7 @@ async function showPage(page, data) {
         let images = postPageContent.getElementsByTagName("img");
 
         for (let i = 0; i < images.length; i++) {
-            images[i].addEventListener("click", function() {
+            images[i].addEventListener("click", function () {
                 showImageViewer(images[i]);
             });
 
@@ -224,11 +228,16 @@ async function showPage(page, data) {
     }
 
     // List Page
+    // TODO: Redo this to handle the new ways posts can be populated
     if (page == 1) {
         hideAllPages();
         if (data && data.populate || !listPagePopulated) {
-            await populateListPage();
-            listPagePopulated = true;
+            if (data.posts) {
+                await populateListPage(data.posts);
+            } else {
+                await populateListPage(await (await fetch("/api/posts")).json());
+                listPagePopulated = true;
+            }
         }
 
         listPage.style.display = "block";
@@ -371,7 +380,92 @@ async function populateSidebar() {
     sidebar.innerHTML = parseMarkdown(sidebarPost.content);
 }
 
+/**
+ * Toggles the visibility of a modal on the Edit page.
+ * @param {Number} page The modal number to be toggled.
+ */
+function toggleEditPageModal(page) {
+    let pageElement;
+
+    switch (page) {
+        case 1:
+            pageElement = editPageInputs;
+            break;
+        case 2:
+            pageElement = editPagePreview;
+            break;
+        case 3:
+            pageElement = editPageUpload;
+            break;
+    }
+
+    if (pageElement.style.display == "none") {
+        pageElement.style.display = "block";
+    } else {
+        pageElement.style.display = "none";
+    }
+
+    if (editPageInputs.style.display == "none" && editPagePreview.style.display == "none" && editPageUpload.style.display == "none") {
+        editPageEmpty.style.display = "block";
+    } else {
+        editPageEmpty.style.display = "none";
+    }
+}
+
+/**
+ * Uploads a file to the server.
+ * @param {File} file 
+ * @returns The server's response.
+ */
+async function uploadFile(file) {
+    let response = await fetch("/api/upload", {
+        method: "POST",
+        body: file
+    });
+
+    return response;
+}
+
+async function searchTitle(title) {
+
+    let response = await fetch("/api/search/" + title);
+
+    if (response.status == 200) {
+
+        let body = await response.json();
+
+        if (body == "") {
+            console.log("Nothing found");
+            return "";
+        } else {
+            return body;
+        }
+
+    } else {
+        throw new Error("Search Error: " + response.status + " - " + await response.text());
+    }
+}
+
 // Event Listeners
+
+headerSearchbar.addEventListener("input", async function () {
+    if (headerSearchbar.value && headerSearchbar.value != "") {
+
+        let searchObject = await searchTitle(headerSearchbar.value);
+
+        console.log(searchObject);
+
+        if (searchObject != "") {
+            showPage(1, { populate: true, posts: await searchTitle(headerSearchbar.value) });
+            return;
+        } else {
+            listPage.innerHTML = "<p class='large-text page-title'>No posts were found for your search.</p>"
+            return;
+        }
+    }
+    
+    showPage(1, { populate: true });
+});
 
 postPageReturn.addEventListener("click", function () {
     showPage(1, { history: true, populate: !listPagePopulated });
@@ -438,7 +532,7 @@ editPageContentInput.addEventListener("input", function () {
     }
 });
 
-editPageUploadAlt.addEventListener("input", function() {
+editPageUploadAlt.addEventListener("input", function () {
     let imgCodeList = editPageUploadCode.innerText.split("\"");
     editPageUploadCode.innerText = `<img src="${imgCodeList[1]}" alt="${editPageUploadAlt.value}">`;
 });
@@ -473,36 +567,6 @@ postPageDelete.addEventListener("click", async function () {
     }
 });
 
-function toggleEditPageModal(page) {
-
-    let pageElement;
-
-    switch (page) {
-        case 1:
-            pageElement = editPageInputs;
-            break;
-        case 2:
-            pageElement = editPagePreview;
-            break;
-        case 3:
-            pageElement = editPageUpload;
-            break;
-    }
-
-    if (pageElement.style.display == "none") {
-        pageElement.style.display = "block";
-    } else {
-        pageElement.style.display = "none";
-    }
-
-    if (editPageInputs.style.display == "none" && editPagePreview.style.display == "none" && editPageUpload.style.display == "none") {
-        editPageEmpty.style.display = "block";
-    } else {
-        editPageEmpty.style.display = "none";
-    }
-
-}
-
 editPageInputsOpen.addEventListener("click", function () {
     toggleEditPageModal(1);
 });
@@ -514,20 +578,6 @@ editPagePreviewOpen.addEventListener("click", function () {
 editPageUploadOpen.addEventListener("click", function () {
     toggleEditPageModal(3);
 });
-
-/**
- * Uploads a file to the server.
- * @param {File} file 
- * @returns The server's response.
- */
-async function uploadFile(file) {
-    let response = await fetch("/api/upload", {
-        method: "POST",
-        body: file
-    });
-
-    return response;
-}
 
 editPageUploadSave.addEventListener("click", async function () {
 
@@ -608,15 +658,15 @@ editPageSave.addEventListener("click", async function () {
     }
 });
 
-imageViewer.addEventListener("click", function() {
+imageViewer.addEventListener("click", function () {
     imageViewer.style.display = "none";
 });
 
-imageViewerAlt.addEventListener("click", function(event) {
+imageViewerAlt.addEventListener("click", function (event) {
     event.stopPropagation();
 });
 
-imageViewerImage.addEventListener("click", function(event) {
+imageViewerImage.addEventListener("click", function (event) {
     event.stopPropagation();
 });
 
@@ -642,7 +692,7 @@ onpopstate = async function (event) {
 
 window.onload = async function () {
 
-    totalPosts = parseInt(await (await fetch("/api/postcount")).text());
+    await searchTitle("Dev Log");
 
     let pathnameArray = window.location.pathname.split("/");
     if (pathnameArray[pathnameArray.length - 1] == "") {

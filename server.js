@@ -32,7 +32,7 @@ if (randomCommand != "") {
 async function loadDatabase(fileName) {
     db = await new sqlite3.Database(fileName);
 
-    const createTable1 = `
+    const postsTableCommand = `
     CREATE TABLE IF NOT EXISTS posts (
     number INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
     id TEXT NOT NULL UNIQUE,
@@ -44,20 +44,20 @@ async function loadDatabase(fileName) {
     )
     `
 
-    const createTable2 = `
+    const infoTableCommand = `
     CREATE TABLE IF NOT EXISTS info (
     type INTEGER PRIMARY KEY,
     content TEXT NOT NULL
     )
     `
 
-    db.run(createTable1, (err) => {
+    db.run(postsTableCommand, (err) => {
         if (err) {
             return err;
         }
     });
 
-    db.run(createTable2, (err) => {
+    db.run(infoTableCommand, (err) => {
         if (err) {
             return err;
         }
@@ -118,7 +118,7 @@ async function generatePostId() {
         }
 
         valid = await new Promise((resolve, reject) => {
-            db.get("SELECT * FROM posts WHERE id = ?", [id], (err, row) => {
+            db.get("SELECT id FROM posts WHERE id = ?", [id], (err, row) => {
                 if (err) {
                     return reject(err);
                 }
@@ -168,11 +168,12 @@ async function createPost(type, title, content) {
  * @param {String} content The new content of the post.
  * @returns {Promise} A Promise that will either resolve to the edited post or an error message if the edit fails.
  */
-function modifyPost(id, type, title, content) {
+function editPost(id, type, title, content) {
 
     let time = Date.now();
 
     return new Promise((resolve, reject) => {
+
         if (id == "sidebar") {
             db.get("UPDATE info SET content = ? WHERE id = 4 RETURNING *", [content], (err, row) => {
                 if (err) {
@@ -200,7 +201,7 @@ function modifyPost(id, type, title, content) {
  */
 async function deletePost(id) {
 
-    postCount = await getPostCount();
+    let postCount = await getPostCount();
 
     return new Promise((resolve, reject) => {
 
@@ -253,7 +254,12 @@ app.post("/api/create", async (req, res) => {
 
 app.put("/api/edit/:postid", async (req, res) => {
     try {
-        let editedPost = await modifyPost(req.body.id, req.body.type, req.body.title, req.body.content);
+        if (!req.body.title || req.body.title == "") {
+            res.status(400).send("Post title cannot be empty.");
+            return;
+        }
+
+        let editedPost = await editPost(req.body.id, req.body.type, req.body.title, req.body.content);
         res.status(200).send(editedPost.id);
     } catch (err) {
         res.status(500).send(err.message);
@@ -273,7 +279,7 @@ app.delete("/api/delete/:postid", async (req, res) => {
 app.get("/api/post/:postid", (req, res) => {
     db.get("SELECT * FROM posts WHERE id = ?", [req.params.postid], (err, row) => {
         if (err) {
-            console.error(err.message)
+            console.error(err.message);
             return res.send(err.message);
         }
 
@@ -281,6 +287,21 @@ app.get("/api/post/:postid", (req, res) => {
             res.json(row);
         } else {
             res.send("Post " + req.params.postid + " does not exist.");
+        }
+    });
+});
+
+app.get("/api/search/:title", (req, res) => {
+    db.all("SELECT * FROM posts WHERE LOWER(title) LIKE LOWER(?)", [`%${req.params.title}%`], (err, row) => {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).send(err.message);
+        }
+
+        if (row) {
+            res.status(200).json(row);
+        } else {
+            res.send("Nothing found");
         }
     });
 });
