@@ -1,6 +1,7 @@
 const postPage = document.getElementById("post-page");
 const listPage = document.getElementById("list-page");
 const editPage = document.getElementById("edit-page");
+const searchPage = document.getElementById("search-page");
 const errorPage = document.getElementById("error-page");
 const sidebar = document.getElementById("sidebar-post-container");
 
@@ -14,6 +15,8 @@ const headerTitle = document.getElementById("header-title");
 const headerSubtitle = document.getElementById("header-subtitle");
 const headerSearchbarLabel = document.getElementById("header-searchbar-label");
 const headerSearchbar = document.getElementById("header-searchbar");
+const headerSearchbarButton = document.getElementById("header-searchbar-button");
+const headerSearchbarAdvanced = document.getElementById("header-searchbar-advanced");
 
 const postPageReturn = document.getElementById("post-page-return");
 const postPageTitle = document.getElementById("post-page-title");
@@ -49,8 +52,9 @@ const editPageUploadResponse = document.getElementById("edit-page-upload-respons
 const editPageUploadCode = document.getElementById("edit-page-upload-code");
 const editPageUploadPreview = document.getElementById("edit-page-upload-preview");
 const editPageUploadAlt = document.getElementById("edit-page-upload-alt");
-
 const editPageEmpty = document.getElementById("edit-page-empty");
+
+const searchPageReturn = document.getElementById("search-page-return");
 
 const errorPageText = document.getElementById("error-page-text");
 const errorPageReturn = document.getElementById("error-page-return");
@@ -58,6 +62,7 @@ const errorPageReturn = document.getElementById("error-page-return");
 let postViewId = "";
 let currentPost;
 let postViewType = 1;
+let savedStates = 0;
 
 let previousScroll = 0;
 
@@ -93,9 +98,30 @@ function showImageViewer(image) {
     imageViewerAlt.innerText = image.alt;
 }
 
+function initializeHistoryState(object, url) {
+    window.history.replaceState({ "stateNum": 0, "object": object }, "", url);
+}
+
+function pushHistoryState(object, url) {
+    savedStates++;
+    window.history.pushState({ "stateNum": savedStates, "object": object }, "", url);
+}
+
+// TODO: Something about this is broken
+function handleReturn() {
+
+    console.log(savedStates);
+
+    if (savedStates == 0) {
+        showPage(1, { "populate": true } );
+    } else {
+        window.history.back();
+    }
+}
+
 /**
  * Shows a page in the content area of the site.
- * @param {Number} page The page to be shown. 1 = List, 2 = Post, 3 = Edit
+ * @param {Number} page The page to be shown. 0 = Error, 1 = List, 2 = Post, 3 = Edit, 4 = Search
  * @param {JSON} data A JSON object containing additional data about how the page should be shown.
  */
 async function showPage(page, data) {
@@ -107,6 +133,7 @@ async function showPage(page, data) {
         listPage.style.display = "none";
         postPage.style.display = "none";
         editPage.style.display = "none";
+        searchPage.style.display = "none";
         errorPage.style.display = "none";
     }
 
@@ -141,8 +168,6 @@ async function showPage(page, data) {
             postElementContent.className = "post-markdown-container";
             postElementContent.innerHTML = parseMarkdown(content);
             postElement.appendChild(postElementContent);
-
-            // TODO: Add the image viewer
 
             let postElementCreated = document.createElement("small");
             postElementCreated.className = "small-text";
@@ -248,8 +273,7 @@ async function showPage(page, data) {
         }
 
         if (data && data.history) {
-            let object = { "page": 1 }
-            window.history.pushState(object, "", "/");
+            pushHistoryState({ "page": 1 }, "/");
         }
     }
 
@@ -268,12 +292,10 @@ async function showPage(page, data) {
         postPageRaw.innerText = "View Raw";
 
         postPage.style.display = "block";
-        // TODO: Save the scroll position on the site to return the user to where they were if they go back
         window.scroll(0, 0);
 
         if (data && data.history) {
-            let object = { "page": 2, "id": data.post.id };
-            window.history.pushState(object, "", "/post/" + data.post.id);
+            pushHistoryState({ "page": 2, "id": data.post.id }, "/post/" + data.post.id);
         }
     }
 
@@ -301,13 +323,24 @@ async function showPage(page, data) {
         }
 
         if (data && data.history) {
-            let object = { "page": 3 }
-            window.history.pushState(object, "", "/edit" + (data.post ? "?post=" + (data.post.title ? data.post.id : "sidebar") : ""));
+            pushHistoryState({ "page": 3 }, "/edit" + (data.post ? "?post=" + (data.post.title ? data.post.id : "sidebar") : ""));
+        }
+    }
+
+    // Search Page
+    else if (page == 4) {
+        hideAllPages();
+
+        searchPage.style.display = "block";
+
+        if (data && data.history) {
+
+            pushHistoryState({ "page": 4 }, "/search");
         }
     }
 
     // Error Page
-    else if (page == 4) {
+    else if (page == 0) {
         hideAllPages();
 
         if (data && data.message) {
@@ -435,7 +468,6 @@ async function searchTitle(title) {
         let body = await response.json();
 
         if (body == "") {
-            console.log("Nothing found");
             return "";
         } else {
             return body;
@@ -446,14 +478,10 @@ async function searchTitle(title) {
     }
 }
 
-// Event Listeners
-
-headerSearchbar.addEventListener("input", async function () {
+async function populateSearch() {
     if (headerSearchbar.value && headerSearchbar.value != "") {
 
         let searchObject = await searchTitle(headerSearchbar.value);
-
-        console.log(searchObject);
 
         if (searchObject != "") {
             showPage(1, { populate: true, posts: await searchTitle(headerSearchbar.value) });
@@ -463,12 +491,30 @@ headerSearchbar.addEventListener("input", async function () {
             return;
         }
     }
-    
-    showPage(1, { populate: true });
+    else {
+        showPage(1, { populate: true });
+    }
+}
+
+// Event Listeners
+
+headerSearchbar.addEventListener("keydown", function (event) {
+    if (event.code === "Enter") {
+        populateSearch();
+    }
+});
+
+headerSearchbarButton.addEventListener("click", function () {
+    populateSearch();
+});
+
+headerSearchbarAdvanced.addEventListener("click", function () {
+    showPage(4, { "history": true });
 });
 
 postPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !listPagePopulated });
+    handleReturn();
+    // window.history.back();
 });
 
 postPageRaw.addEventListener("click", async function () {
@@ -491,16 +537,16 @@ postPageEdit.addEventListener("click", async function () {
     try {
         post = await getPost(postViewId);
     } catch (err) {
-        showPage(4, { message: err.message });
+        showPage(0, { message: err.message });
         return;
     }
 
     showPage(3, { "history": true, "post": { "id": postViewId, "title": post.title, "content": post.content } });
 });
 
-// TODO: Make this return button go back to the post page if the Edit button was clicked
 editPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !listPagePopulated });
+    handleReturn();
+    // window.history.back();
 });
 
 editPageLoad.addEventListener("click", async function () {
@@ -592,7 +638,6 @@ editPageUploadSave.addEventListener("click", async function () {
 
     if (response.status == 201) {
         let resText = await response.text();
-        console.log(editPageUploadAlt.value);
         let imageCode = `<img src="${resText}" alt="${editPageUploadAlt.value}">`;
 
         editPageUploadResponse.innerText = "Uploaded the file.";
@@ -658,6 +703,11 @@ editPageSave.addEventListener("click", async function () {
     }
 });
 
+searchPageReturn.addEventListener("click", function () {
+    handleReturn();
+    // window.history.back();
+});
+
 imageViewer.addEventListener("click", function () {
     imageViewer.style.display = "none";
 });
@@ -672,69 +722,90 @@ imageViewerImage.addEventListener("click", function (event) {
 
 // When the browser forward and back buttons are pressed
 onpopstate = async function (event) {
-    if (event.state.page == 1) {
+
+    if (!event.state || event.state == 0) {
+        showPage(1, { "populate": true });
+        return;
+    }
+
+    if (event.state.stateNum > savedStates) {
+        savedStates++;
+    } else {
+        savedStates--;
+    }
+
+
+    let eventPage = event.state.object.page;
+
+    if (eventPage == 1) {
         showPage(1);
-    } else if (event.state.page == 2) {
+    } else if (eventPage == 2) {
 
         let post;
 
         try {
-            post = await getPost(event.state.id);
+            post = await getPost(event.state.object.id);
         } catch (err) {
             console.error(err.message);
         }
 
         showPage(2, { "populate": true, "post": post });
-    } else if (event.state.page == 3) {
+    } else if (eventPage == 3) {
         showPage(3);
+    } else if (eventPage == 4) {
+        showPage(4);
     }
 }
 
 window.onload = async function () {
-
-    await searchTitle("Dev Log");
 
     let pathnameArray = window.location.pathname.split("/");
     if (pathnameArray[pathnameArray.length - 1] == "") {
         pathnameArray.pop();
     }
 
-    let pathnamePage = pathnameArray[1];
+    if (pathnameArray != "") {
 
-    if (pathnamePage == "post") {
-        let postId = pathnameArray[2];
-        let post;
+        let pathnamePage = pathnameArray[1].toLowerCase();
 
-        try {
-            post = await getPost(postId);
-        } catch (err) {
-            console.error(err.message);
-            showPage(4, { "message": err.message });
-        }
-
-        if (post) {
-            showPage(2, { populate: true, history: true, "post": { id: postId, title: post.title, content: post.content, created_at: post.created_at, modified_at: post.modified_at } });
-        }
-    } else if (pathnamePage == "edit") {
-
-        let params = new URLSearchParams(document.location.search);
-
-        if (params.get("post")) {
-
+        if (pathnamePage == "post") {
+            let postId = pathnameArray[2];
             let post;
 
             try {
-                post = await getPost(params.get("post"));
+                post = await getPost(postId);
             } catch (err) {
                 console.error(err.message);
-                showPage(4, { "message": err.message });
+                showPage(0, { "message": err.message });
             }
 
             if (post) {
-                showPage(3, { "history": true, "post": post });
+                showPage(2, { populate: true, history: true, "post": { id: postId, title: post.title, content: post.content, created_at: post.created_at, modified_at: post.modified_at } });
             }
-        } else {
-            showPage(3, { history: true });
+        } else if (pathnamePage == "edit") {
+
+            let params = new URLSearchParams(document.location.search);
+
+            if (params.get("post")) {
+
+                let post;
+
+                try {
+                    post = await getPost(params.get("post"));
+                } catch (err) {
+                    console.error(err.message);
+                    showPage(0, { "message": err.message });
+                }
+
+                if (post) {
+                    showPage(3, { "history": true, "post": post });
+                }
+            } else {
+                showPage(3, { history: true });
+            }
+        } else if (pathnamePage == "search") {
+            initializeHistoryState({ history: true }, "/search");
+            showPage(4);
         }
     } else {
         showPage(1, { history: true, populate: true });

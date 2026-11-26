@@ -23,8 +23,12 @@
             <p id="header-subtitle"></p>
         </div>
         <div id="header-searchbar-group">
-            <label id="header-searchbar-label" for="header-searchbar">Loading...</label>
-            <input id="header-searchbar" placeholder="Type something...">
+            <label class="normal-text" id="header-searchbar-label" for="header-searchbar">Loading...</label>
+            <span>
+                <input class="normal-text text-input" id="header-searchbar" placeholder="Type something...">
+                <button class="normal-text text-button" id="header-searchbar-button">Search</button>
+            </span>
+            <a class="small-text link-text" id="header-searchbar-advanced">Advanced Search</a>
         </div>
     </div>
 
@@ -44,7 +48,7 @@
 
                 <div id="post-page-header">
                     <div id="post-page-header-left">
-                        <button id="post-page-return" class="normal-text text-button">Return</button>
+                        <button id="post-page-return" class="normal-text text-button">Back</button>
 
                         <p class="large-text page-title" id="post-page-title"></p>
 
@@ -113,7 +117,8 @@
                             copy the displayed code to add the image into your post.</p>
                         <label id="edit-page-upload-zone" class="normal-text" for="edit-page-upload-input">Drop files
                             here, or
-                            <input class="normal-text" id="edit-page-upload-input" type="file" accept="image/png, image/jpeg, image/gif, image/svg+xml, image/webp, image/avif, image/x-icon">
+                            <input class="normal-text" id="edit-page-upload-input" type="file"
+                                accept="image/png, image/jpeg, image/gif, image/svg+xml, image/webp, image/avif, image/x-icon">
                         </label>
 
                         <label for="edit-page-upload-alt" class="normal-text">Alt Text (Optional)
@@ -137,10 +142,16 @@
                 </div>
             </div>
 
+            <div id="search-page" class="page" style="display: none;">
+                <button class="normal-text text-button" id="search-page-return">Back</button>
+                <p class="large-text page-title">Advanced Search</p>
+                <hr>
+            </div>
+
             <div id="error-page" class="page" style="display: none;">
                 <p class="large-text">An error occurred!</p>
                 <p id="error-page-text" class="code-text"></p>
-                <button id="error-page-return" class="normal-text text-button">Return</button>
+                <button id="error-page-return" class="normal-text text-button">Back</button>
             </div>
         </div>
     </div>

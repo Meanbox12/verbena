@@ -9,6 +9,7 @@ const upload = multer({ dest: "public/uploads/temp/" });
 let db;
 
 const PORT = 4000;
+const INDEXFILE = path.join(__dirname, "public", "index.html");
 
 app.use(express.static(path.join(__dirname, "/public")));
 app.use(express.json());
@@ -96,6 +97,8 @@ function getPostCount() {
         });
     });
 }
+
+// TODO: Repurpose this function into a general generator that takes a length input
 
 /**
  * Generates a unique post ID that is not in use by any other post.
@@ -356,10 +359,6 @@ app.get("/api/info", (req, res) => {
     });
 });
 
-app.get("/upload", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "upload.html"));
-});
-
 // TODO: Clean orphaned uploads??
 app.post("/api/upload", upload.single("file"), async (req, res) => {
 
@@ -406,15 +405,19 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
 });
 
 app.get("/post/:postid", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(INDEXFILE);
 });
 
 app.get("/edit", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(INDEXFILE);
+});
+
+app.get("/search", (req, res) => {
+    res.sendFile(INDEXFILE);
 });
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(INDEXFILE);
 });
 
 app.listen(PORT, async function () {

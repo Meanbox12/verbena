@@ -141,10 +141,12 @@ hr {
 
 #header-searchbar,
 #header-searchbar-label {
-    font-family: var(--secondary-font);
-    font-weight: var(--secondary-font-weight);
-    font-size: var(--secondary-font-size);
     justify-self: end;
+}
+
+#header-searchbar-advanced {
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 #page {
@@ -199,7 +201,8 @@ hr {
 }
 
 #post-page-return,
-#edit-page-return {
+#edit-page-return,
+#search-page-return {
     margin-bottom: 20px;
 }
 
