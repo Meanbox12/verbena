@@ -99,11 +99,14 @@ function showImageViewer(image) {
 }
 
 function initializeHistoryState(object, url) {
-    window.history.replaceState({ "stateNum": 0, "object": object }, "", url);
+    window.history.replaceState({ "stateNum": 1, "object": object }, "", url);
 }
 
 function pushHistoryState(object, url) {
+
     stateNum++;
+    console.log("A state was pushed and the new stateNum is " + stateNum);
+
     window.history.pushState({ "stateNum": stateNum, "object": object }, "", url);
 }
 
@@ -113,9 +116,10 @@ function handleReturn() {
     console.log(stateNum);
 
     if (stateNum == 0) {
-        showPage(1, { "populate": true } );
+        showPage(1, { "populate": true });
     } else {
         window.history.back();
+        handlePopState(2, window.history.state);
     }
 }
 
@@ -720,25 +724,26 @@ imageViewerImage.addEventListener("click", function (event) {
     event.stopPropagation();
 });
 
-// When the browser forward and back buttons are pressed
-onpopstate = async function (event) {
-
+async function handlePopState(type, event) {
     if (!event.state || event.state == 0) {
+
+        console.log("A state was popped but there were no states to pop");
+
         showPage(1, { "populate": true });
+        initializeHistoryState({ "page": 1 }, "/");
+        stateNum++;
         return;
     }
 
-    if (event.state.stateNum > stateNum) {
-        stateNum++;
-    } else {
-        stateNum--;
-    }
+    stateNum = event.state.stateNum;
 
+    console.log("A state was popped and the new stateNum is " + stateNum);
 
     let eventPage = event.state.object.page;
 
     if (eventPage == 1) {
         showPage(1);
+        pushHistoryState({ "page": 1 }, "/");
     } else if (eventPage == 2) {
 
         let post;
@@ -750,11 +755,25 @@ onpopstate = async function (event) {
         }
 
         showPage(2, { "populate": true, "post": post });
+        if (type == 2) {
+            pushHistoryState({ "page": 2, "id": post.id }, "/post/" + post.id);
+        }
     } else if (eventPage == 3) {
         showPage(3);
+        if (type == 2) {
+            pushHistoryState({ "page": 3 }, "/edit");
+        }
     } else if (eventPage == 4) {
         showPage(4);
+        if (type == 2) {
+            pushHistoryState({ "page": 4 }, "/search");
+        }
     }
+}
+
+// When the browser forward and back buttons are pressed
+onpopstate = async function (event) {
+    handlePopState(1, event);
 }
 
 window.onload = async function () {

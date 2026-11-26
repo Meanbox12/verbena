@@ -300,6 +300,11 @@ label {
     max-width: 100%;
 }
 
+#edit-page-id-input {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
 #edit-page-title-input {
     width: 100%;
     box-sizing: border-box;
