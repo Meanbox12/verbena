@@ -62,7 +62,7 @@ const errorPageReturn = document.getElementById("error-page-return");
 let postViewId = "";
 let currentPost;
 let postViewType = 1;
-let savedStates = 0;
+let stateNum = 0;
 
 let previousScroll = 0;
 
@@ -103,16 +103,16 @@ function initializeHistoryState(object, url) {
 }
 
 function pushHistoryState(object, url) {
-    savedStates++;
-    window.history.pushState({ "stateNum": savedStates, "object": object }, "", url);
+    stateNum++;
+    window.history.pushState({ "stateNum": stateNum, "object": object }, "", url);
 }
 
 // TODO: Something about this is broken
 function handleReturn() {
 
-    console.log(savedStates);
+    console.log(stateNum);
 
-    if (savedStates == 0) {
+    if (stateNum == 0) {
         showPage(1, { "populate": true } );
     } else {
         window.history.back();
@@ -728,10 +728,10 @@ onpopstate = async function (event) {
         return;
     }
 
-    if (event.state.stateNum > savedStates) {
-        savedStates++;
+    if (event.state.stateNum > stateNum) {
+        stateNum++;
     } else {
-        savedStates--;
+        stateNum--;
     }
 
 
@@ -798,17 +798,17 @@ window.onload = async function () {
                 }
 
                 if (post) {
-                    showPage(3, { "history": true, "post": post });
+                    showPage(3, { "post": post });
                 }
             } else {
-                showPage(3, { history: true });
+                showPage(3);
             }
         } else if (pathnamePage == "search") {
-            initializeHistoryState({ history: true }, "/search");
+            // initializeHistoryState({ history: true }, "/search");
             showPage(4);
         }
     } else {
-        showPage(1, { history: true, populate: true });
+        showPage(1, { populate: true });
     }
 
     populateHeader();
