@@ -5,7 +5,10 @@ const path = require("node:path");
 const fs = require("node:fs");
 
 const app = express();
-const upload = multer({ dest: "public/uploads/temp/" });
+app.disable("x-powered-by");
+
+// TODO: Make the size limit a changeable setting
+const upload = multer({ dest: "public/uploads/temp/", limits: { fileSize: 1000000 } });
 let db;
 
 const PORT = 4000;
@@ -31,7 +34,7 @@ if (randomCommand != "") {
  * @returns An error if the tables fail to load, or true if they load successfully.
  */
 async function loadDatabase(fileName) {
-    db = await new sqlite3.Database(fileName);
+    db = new sqlite3.Database(fileName);
 
     const postsTableCommand = `
     CREATE TABLE IF NOT EXISTS posts (
@@ -81,9 +84,9 @@ async function loadDatabase(fileName) {
 
 /**
  * Gets the current post count.
- * @returns {Number} The current post count.
+ * @returns {Promise} A Promise that resolves to the current post count.
  */
-function getPostCount() {
+async function getPostCount() {
 
     return new Promise((resolve, reject) => {
         db.get("SELECT COUNT() FROM posts", (err, count) => {
@@ -92,7 +95,7 @@ function getPostCount() {
                 return reject(err);
             }
 
-            let parsedCount = parseInt(count["COUNT()"]);
+            let parsedCount = Number.parseInt(count["COUNT()"]);
             resolve(parsedCount);
         });
     });
@@ -106,12 +109,15 @@ function getPostCount() {
  */
 async function generatePostId() {
 
-    let id = "";
+    let id;
     let letters = ["a", "b", "c", "d", "e", "f"];
     let valid = false;
     let tries = 0;
 
     while (!valid && tries < 100) {
+
+        id = "";
+
         for (let i = 0; i < 6; i++) {
             let char = Math.floor(Math.random() * 16);
             if (char > 9) {
@@ -120,7 +126,7 @@ async function generatePostId() {
             id += char;
         }
 
-        valid = await new Promise((resolve, reject) => {
+        valid = await new Promise((resolve, reject) => {  // NOSONAR
             db.get("SELECT id FROM posts WHERE id = ?", [id], (err, row) => {
                 if (err) {
                     return reject(err);
@@ -204,8 +210,6 @@ function editPost(id, type, title, content) {
  */
 async function deletePost(id) {
 
-    let postCount = await getPostCount();
-
     return new Promise((resolve, reject) => {
 
         // Delete the post
@@ -215,6 +219,22 @@ async function deletePost(id) {
             }
 
             // Reindex post IDs
+            db.run("UPDATE posts SET number = number - 1 WHERE number > ?", [row.number], async (err) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                // Update the row count
+                db.run("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [await getPostCount() - 1, "posts"], (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    resolve(row);
+                });
+            });
+
+            /*
             for (let i = (row.number + 1); i <= postCount; i++) {
 
                 await new Promise((resolve, reject) => {
@@ -227,15 +247,7 @@ async function deletePost(id) {
                     });
                 });
             }
-
-            // Update the row count
-            db.run("UPDATE sqlite_sequence SET seq = ? WHERE name = ?", [postCount - 1, "posts"], (err) => {
-                if (err) {
-                    return reject(err);
-                }
-            });
-
-            resolve(row);
+                */
 
         });
     });
@@ -248,7 +260,6 @@ app.post("/api/create", async (req, res) => {
             return;
         }
         let createdPost = await createPost(req.body.type, req.body.title, req.body.content);
-        postCount = await getPostCount();
         res.status(201).send(createdPost.id);
     } catch (err) {
         res.status(500).send(err.message);
@@ -331,7 +342,7 @@ app.get("/api/postcount", (req, res) => {
 
 app.get("/api/info/:infoid", (req, res) => {
 
-    db.get("SELECT content FROM info WHERE rowid = ?", [req.params.infoid], (err, row) => {
+    db.get("SELECT content FROM info WHERE id = ?", [req.params.infoid], (err, row) => {
         if (err) {
             return console.error(err.message);
         }
@@ -359,23 +370,22 @@ app.get("/api/info", (req, res) => {
     });
 });
 
+async function hash(input) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(input);
+
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
+    return hashHex;
+}
+
 // TODO: Clean orphaned uploads??
 app.post("/api/upload", upload.single("file"), async (req, res) => {
-
-    // This function is from my Million Dollar Challenge project hasher.html
-    async function hash(input) {
-        const encoder = new TextEncoder();
-        const data = encoder.encode(input);
-
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
-            .map(b => b.toString(16).padStart(2, "0"))
-            .join("");
-
-        return hashHex;
-    }
 
     try {
 

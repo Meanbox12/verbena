@@ -93,7 +93,6 @@ hr {
 
 #header {
     height: 20vh;
-    background-color: white;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;

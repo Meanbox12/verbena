@@ -104,148 +104,157 @@ function showImageViewer(image) {
 }
 
 /**
+ * Hides all pages in the content area.
+ */
+function hideAllPages() {
+    listPage.style.display = "none";
+    postPage.style.display = "none";
+    editPage.style.display = "none";
+    searchPage.style.display = "none";
+    errorPage.style.display = "none";
+}
+
+/**
+ * Populates the Post page with a post.
+ * @param {Number} id The post's ID.
+ * @param {String} title The post's title.
+ * @param {String} content The post's content.
+ * @param {Number} created_at The post's creation date.
+ * @param {Number} modified_at The post's last modified date.
+ */
+function populatePostPage(id, title, content, created_at, modified_at) {
+    postPageTitle.innerText = title;
+    postPageContent.innerHTML = parseMarkdown(content);
+    let creationDate = new Date(Math.round(created_at)).toLocaleString();
+    let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
+    postPageCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
+    postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
+    postPageId.innerText = id;
+    postViewId = id;
+
+    let images = postPageContent.getElementsByTagName("img");
+
+    for (let i of images) {
+        i.addEventListener("click", function () {
+            showImageViewer(i);
+        });
+
+        i.style.cursor = "pointer";
+    }
+}
+
+function populateEditPage(id, title, content) {
+    editPageIdInput.value = id;
+    editPageTitleInput.value = title;
+    editPageContentInput.value = content;
+    editPagePostReturn.innerText = "Return to post " + id;
+    editPagePostReturn.style.display = "inline-block";
+    postViewId = id;
+}
+
+/**
+ * Creates a Element for a post.
+ * @param {Number} id The post's ID.
+ * @param {String} title The post's title.
+ * @param {String} content The post's content.
+ * @param {Number} created_at The post's creation date.
+ * @param {Number} modified_at The post's last modified date.
+ * @returns {Element} The created HTML element.
+ */
+function createPostElement(id, title, content, created_at, modified_at) {
+    let postElement = document.createElement("div");
+    postElement.className = "post"
+    postElement.id = "post-" + id;
+
+    let postElementTitle = document.createElement("a");
+    postElementTitle.className = "large-text";
+    postElementTitle.innerText = title;
+    postElementTitle.tabIndex = 0;
+    postElementTitle.href = "/post/" + id;
+    postElement.appendChild(postElementTitle);
+
+    let postElementContent = document.createElement("p");
+    postElementContent.className = "post-markdown-container";
+    postElementContent.innerHTML = parseMarkdown(content);
+    postElement.appendChild(postElementContent);
+
+    let postElementCreated = document.createElement("small");
+    postElementCreated.className = "small-text";
+    let creationDate = new Date(Math.round(created_at)).toLocaleString();
+    postElementCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
+    postElement.appendChild(postElementCreated);
+
+    postElement.appendChild(document.createElement("br"));
+
+    let postElementModified = document.createElement("small");
+    postElementModified.className = "small-text";
+    let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
+    postElementModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
+    postElement.appendChild(postElementModified);
+
+
+    postElementTitle.addEventListener("click", async function (event) {
+        // Stop the link from actually redirecting
+        event.preventDefault();
+
+        await loadPage(2, { "populate": true, "history": true, "post": { id: id, title: title, content: content, created_at: created_at, modified_at: modified_at } });
+    });
+
+
+    return postElement;
+}
+
+/**
+ * Populates the List page with post elements.
+ * @param {JSON} posts A JSON objects containing the posts to be shown.
+ */
+async function populateListPage(posts) {
+
+    //let postsRaw = await fetch("/api/posts");
+    //let posts = await postsRaw.json();
+
+    listPage.innerHTML = "";
+
+    for (let i = posts.length - 1; i >= 0; i--) {
+        let postObject = posts[i];
+        let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at, postObject.modified_at);
+        listPage.appendChild(postElement);
+        listPage.appendChild(document.createElement("hr"));
+    }
+
+    let images = listPage.getElementsByTagName("img");
+
+    for (let i of images) {
+        i.addEventListener("click", function () {
+            showImageViewer(i);
+        });
+
+        i.style.cursor = "pointer";
+    }
+}
+
+async function loadPage(...args) {
+    try {
+        await showPage(...args);
+    } catch (err) {
+        showError(err);
+    }
+}
+
+/**
  * Shows a page in the content area of the site.
  * @param {Number} page The page to be shown. 0 = Error, 1 = List, 2 = Post, 3 = Edit, 4 = Search
  * @param {JSON} data A JSON object containing additional data about how the page should be shown.
  */
 async function showPage(page, data) {
 
-    /**
-     * Hides all pages in the content area.
-     */
-    function hideAllPages() {
-        listPage.style.display = "none";
-        postPage.style.display = "none";
-        editPage.style.display = "none";
-        searchPage.style.display = "none";
-        errorPage.style.display = "none";
-    }
-
-    /**
-     * Populates the List page with post elements.
-     * @param {JSON} posts A JSON objects containing the posts to be shown.
-     */
-    async function populateListPage(posts) {
-
-        /**
-         * Creates a Element for a post.
-         * @param {Number} id The post's ID.
-         * @param {String} title The post's title.
-         * @param {String} content The post's content.
-         * @param {String} created_at The post's creation date.
-         * @param {String} modified_at The post's last modified date.
-         * @returns {Element} The created HTML element.
-         */
-        function createPostElement(id, title, content, created_at, modified_at) {
-            let postElement = document.createElement("div");
-            postElement.className = "post"
-            postElement.id = "post-" + id;
-
-            let postElementTitle = document.createElement("a");
-            postElementTitle.className = "large-text";
-            postElementTitle.innerText = title;
-            postElementTitle.tabIndex = 0;
-            postElementTitle.href = "/post/" + id;
-            postElement.appendChild(postElementTitle);
-
-            let postElementContent = document.createElement("p");
-            postElementContent.className = "post-markdown-container";
-            postElementContent.innerHTML = parseMarkdown(content);
-            postElement.appendChild(postElementContent);
-
-            let postElementCreated = document.createElement("small");
-            postElementCreated.className = "small-text";
-            let creationDate = new Date(Math.round(created_at)).toLocaleString();
-            postElementCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
-            postElement.appendChild(postElementCreated);
-
-            postElement.appendChild(document.createElement("br"));
-
-            let postElementModified = document.createElement("small");
-            postElementModified.className = "small-text";
-            let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
-            postElementModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
-            postElement.appendChild(postElementModified);
-
-
-            postElementTitle.addEventListener("click", function (event) {
-                // Stop the link from actually redirecting
-                event.preventDefault();
-
-                showPage(2, { "populate": true, "history": true, "post": { id: id, title: title, content: content, created_at: created_at, modified_at: modified_at } });
-            });
-
-
-            return postElement;
-        }
-
-        //let postsRaw = await fetch("/api/posts");
-        //let posts = await postsRaw.json();
-
-        listPage.innerHTML = "";
-
-        for (let i = posts.length - 1; i >= 0; i--) {
-            let postObject = posts[i];
-            let postElement = createPostElement(postObject.id, postObject.title, postObject.content, postObject.created_at, postObject.modified_at);
-            listPage.appendChild(postElement);
-            listPage.appendChild(document.createElement("hr"));
-        }
-
-        let images = listPage.getElementsByTagName("img");
-
-        for (let i = 0; i < images.length; i++) {
-            images[i].addEventListener("click", function () {
-                showImageViewer(images[i]);
-            });
-
-            images[i].style.cursor = "pointer";
-        }
-    }
-
-    /**
-     * Populates the Post page with a post.
-     * @param {Number} id The post's ID.
-     * @param {String} title The post's title.
-     * @param {String} content The post's content.
-     * @param {String} created_at The post's creation date.
-     * @param {String} modified_at The post's last modified date.
-     */
-    function populatePostPage(id, title, content, created_at, modified_at) {
-        postPageTitle.innerText = title;
-        postPageContent.innerHTML = parseMarkdown(content);
-        let creationDate = new Date(Math.round(created_at)).toLocaleString();
-        let modifiedDate = new Date(Math.round(modified_at)).toLocaleString();
-        postPageCreated.innerText = "Created on " + (creationDate == "Invalid Date" ? created_at : creationDate);
-        postPageModified.innerText = "Last modified on " + (modifiedDate == "Invalid Date" ? modified_at : modifiedDate);
-        postPageId.innerText = id;
-        postViewId = id;
-
-        let images = postPageContent.getElementsByTagName("img");
-
-        for (let i = 0; i < images.length; i++) {
-            images[i].addEventListener("click", function () {
-                showImageViewer(images[i]);
-            });
-
-            images[i].style.cursor = "pointer";
-        }
-    }
-
-    function populateEditPage(id, title, content) {
-        editPageIdInput.value = id;
-        editPageTitleInput.value = title;
-        editPageContentInput.value = content;
-        editPagePostReturn.innerText = "Return to post " + id;
-        editPagePostReturn.style.display = "inline-block";
-        postViewId = id;
-    }
-
     // List Page
     // TODO: Redo this to handle the new ways posts can be populated
     if (page == 1) {
+
         hideAllPages();
-        if (data && data.populate || !listPagePopulated) {
-            if (data && data.posts) {
+        if (data?.populate || !listPagePopulated) {
+            if (data?.posts) {
                 await populateListPage(data.posts);
             } else {
                 await populateListPage(await (await fetch("/api/posts")).json());
@@ -259,8 +268,8 @@ async function showPage(page, data) {
             window.scroll(0, previousScroll);
             previousScroll = 0;
         }
-        
-        if (data && data.history) {
+
+        if (data?.history) {
             pushHistoryState("/", 1);
         }
     }
@@ -271,7 +280,7 @@ async function showPage(page, data) {
         previousScroll = scrollY;
 
         hideAllPages();
-        if (data && data.populate) {
+        if (data?.populate) {
             populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at, data.post.modified_at);
             currentPost = data.post;
         }
@@ -282,8 +291,8 @@ async function showPage(page, data) {
         postPage.style.display = "block";
         window.scroll(0, 0);
 
-        if (data && data.history) {
-            pushHistoryState("/post" + (data && data.post && data.post.id ? "/" + data.post.id : ""), 2, { "populate": true, "post": data.post });
+        if (data?.history) {
+            pushHistoryState("/post" + (data?.post?.id ? "/" + data.post.id : ""), 2, { "populate": true, "post": data.post });
         }
     }
 
@@ -293,7 +302,7 @@ async function showPage(page, data) {
         hideAllPages();
         editPage.style.display = "block";
 
-        if (data && data.post) {
+        if (data?.post) {
             if (!data.post.title) {
                 populateEditPage("sidebar", "Sidebar", data.post.content);
             } else {
@@ -301,7 +310,6 @@ async function showPage(page, data) {
             }
         }
 
-        // TODO: Call this somewhere else
         if (editPageTitleInput.value != "") {
             editPagePreviewTitle.innerText = editPageTitleInput.value;
         }
@@ -310,8 +318,8 @@ async function showPage(page, data) {
             editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
         }
 
-        if (data && data.history) {
-            pushHistoryState("/edit" + (data && data.post && data.post.id ? "?post=" + data.post.id : ""), 3, { "post": data.post });
+        if (data?.history) {
+            pushHistoryState("/edit" + (data?.post?.id ? "?post=" + data.post.id : ""), 3, { "post": data.post });
         }
     }
 
@@ -321,7 +329,7 @@ async function showPage(page, data) {
 
         searchPage.style.display = "block";
 
-        if (data && data.history) {
+        if (data?.history) {
             pushHistoryState("/search", 4);
         }
     }
@@ -330,13 +338,18 @@ async function showPage(page, data) {
     else if (page == 0) {
         hideAllPages();
 
-        if (data && data.message) {
+        if (data?.message) {
             errorPageText.innerText = data.message;
         }
 
         errorPage.style.display = "block";
     }
 
+}
+
+function showError(err) {
+    console.error(err);
+    void showPage(0, { "message": err.message });
 }
 
 function pushHistoryState(url, page, data) {
@@ -349,25 +362,24 @@ function pushHistoryState(url, page, data) {
  * @param {String} id The post ID to be fetched.
  * @returns {Promise} A Promise that resolves to a JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
  */
-function getPost(id) {
-    return new Promise(async (resolve, reject) => {
-        let postRaw;
+async function getPost(id) {
+    let postRaw;
 
-        if (id == "sidebar") {
-            postRaw = await fetch("/api/info/4");
-        } else {
-            postRaw = await fetch("/api/post/" + id);
-        }
+    if (id == "sidebar") {
+        postRaw = await fetch("/api/info/4");
+    } else {
+        postRaw = await fetch("/api/post/" + id);
+    }
 
-        let type = postRaw.headers.get("content-type");
+    let type = postRaw.headers.get("content-type");
 
-        if (type.includes("application/json")) {
-            let post = await postRaw.json();
-            resolve(post);
-        } else {
-            reject(await postRaw.text());
-        }
-    })
+    if (type.includes("application/json")) {
+        let post = await postRaw.json();
+        return post;
+    } else {
+        throw new Error(await postRaw.text());
+    }
+
 }
 
 /**
@@ -375,7 +387,7 @@ function getPost(id) {
  * @returns {Number} The number of posts.
  */
 async function getPostCount() {
-    return parseInt(await (await fetch("/api/postcount")).text());
+    return Number.parseInt(await (await fetch("/api/postcount")).text());
 }
 
 /**
@@ -477,36 +489,33 @@ async function populateSearch() {
         let searchObject = await searchTitle(headerSearchbar.value);
 
         if (searchObject != "") {
-            showPage(1, { "populate": true, "history": true, "posts": await searchTitle(headerSearchbar.value) });
-            return;
+            await loadPage(1, { "populate": true, "history": true, "posts": await searchTitle(headerSearchbar.value) });
         } else {
             listPage.innerHTML = "<p class='large-text page-title'>No posts were found for your search.</p>"
-            return;
         }
-    }
-    else {
-        showPage(1, { "populate": true, "history": true });
+    } else {
+        await loadPage(1, { "populate": true, "history": true });
     }
 }
 
 // Event Listeners
 
-headerSearchbar.addEventListener("keydown", function (event) {
+headerSearchbar.addEventListener("keydown", async function (event) {
     if (event.code === "Enter") {
-        populateSearch();
+        await populateSearch();
     }
 });
 
-headerSearchbarButton.addEventListener("click", function () {
-    populateSearch();
+headerSearchbarButton.addEventListener("click", async function () {
+    await populateSearch();
 });
 
-headerSearchbarAdvanced.addEventListener("click", function () {
-    showPage(4, { "history": true });
+headerSearchbarAdvanced.addEventListener("click", async function () {
+    await loadPage(4, { "history": true });
 });
 
-postPageReturn.addEventListener("click", function () {
-    showPage(1, { "history": true });
+postPageReturn.addEventListener("click", async function () {
+    await loadPage(1, { "history": true });
 });
 
 postPageRaw.addEventListener("click", async function () {
@@ -529,17 +538,17 @@ postPageEdit.addEventListener("click", async function () {
     try {
         post = await getPost(postViewId);
     } catch (err) {
-        showPage(0, { message: err.message });
+        void showPage(0, { message: err.message });
         return;
     }
 
-    showPage(3, { "history": true, "post": { "id": postViewId, "title": post.title, "content": post.content } });
+    await loadPage(3, { "history": true, "post": { "id": postViewId, "title": post.title, "content": post.content } });
 });
 
 editPageLoad.addEventListener("click", async function () {
     if (editPageIdInput.value != "") {
         try {
-            showPage(3, { "history": true, "post": await getPost(editPageIdInput.value) });
+            await loadPage(3, { "history": true, "post": await getPost(editPageIdInput.value) });
         } catch (err) {
             console.error(err.message);
             editPageIdInput.value = "";
@@ -578,7 +587,7 @@ postPageDelete.addEventListener("click", async function () {
         return;
     }
 
-    response = await fetch("/api/delete/" + postViewId, {
+    let response = await fetch("/api/delete/" + postViewId, {
         method: "DELETE"
     });
 
@@ -596,12 +605,12 @@ postPageDelete.addEventListener("click", async function () {
     }
 });
 
-editPageReturn.addEventListener("click", function () {
-    showPage(1, { "history": true });
+editPageReturn.addEventListener("click", async function () {
+    await loadPage(1, { "history": true });
 });
 
 editPagePostReturn.addEventListener("click", async function () {
-    showPage(2, { "populate": true, "history": true, "post": await getPost(postViewId) });
+    await loadPage(2, { "populate": true, "history": true, "post": await getPost(postViewId) });
 });
 
 editPageInputsOpen.addEventListener("click", function () {
@@ -694,12 +703,12 @@ editPageSave.addEventListener("click", async function () {
     }
 });
 
-searchPageReturn.addEventListener("click", function () {
-    showPage(1, { "history": true });
+searchPageReturn.addEventListener("click", async function () {
+    await loadPage(1, { "history": true });
 });
 
-errorPageReturn.addEventListener("click", function () {
-    showPage(1, {"history": true} );
+errorPageReturn.addEventListener("click", async function () {
+    await loadPage(1, { "history": true });
 });
 
 imageViewer.addEventListener("click", function () {
@@ -724,26 +733,24 @@ window.onpopstate = async function (event) {
     console.log("State popped, going to page " + event.state.page);
 
     if (event.state.page == 1) {
-        showPage(1);
+        await loadPage(1);
     } else if (event.state.page == 2) {
         if (event.state.data) {
-            console.log({ "populate": true, "post": event.state.data.post });
-            showPage(2, { "populate": true, "post": event.state.data.post });
+            await loadPage(2, { "populate": true, "post": event.state.data.post });
         }
     } else if (event.state.page == 3) {
         if (event.state.data) {
-            console.log({"post": event.state.data.post });
-            showPage(3, {"post": event.state.data.post });
+            await loadPage(3, { "post": event.state.data.post });
         }
     } else if (event.state.page == 4) {
-        showPage(4);
+        await loadPage(4);
     }
 }
 
 window.onload = async function () {
 
     let pathnameArray = window.location.pathname.split("/");
-    if (pathnameArray[pathnameArray.length - 1] == "") {
+    if (pathnameArray.at(-1) == "") {
         pathnameArray.pop();
     }
 
@@ -759,11 +766,11 @@ window.onload = async function () {
                 post = await getPost(postId);
             } catch (err) {
                 console.error(err.message);
-                showPage(0, { "message": err.message });
+                void showPage(0, { "message": err.message });
             }
 
             if (post) {
-                showPage(2, { "populate": true, "history": true, "post": post });
+                await loadPage(2, { "populate": true, "history": true, "post": post });
             }
         } else if (pathnamePage == "edit") {
 
@@ -776,24 +783,27 @@ window.onload = async function () {
                 try {
                     post = await getPost(params.get("post"));
                 } catch (err) {
-                    console.error(err);
-                    showPage(0, { "message": err });
+                    showError(err);
                 }
 
                 if (post) {
-                    showPage(3, { "history": true, "post": post });
+                    await loadPage(3, { "history": true, "post": post });
                 }
             } else {
-                showPage(3, { "history": true });
+                await loadPage(3, { "history": true });
             }
         } else if (pathnamePage == "search") {
-            showPage(4, { "history": true });
+            await loadPage(4, { "history": true });
         }
     } else {
-        showPage(1, { "populate": true, "history": true });
+        await loadPage(1, { "populate": true, "history": true });
     }
 
-    populateHeader();
+    populateHeader().catch((err) => {
+        showError(err);
+    });;
 
-    populateSidebar();
+    populateSidebar().catch((err) => {
+        showError(err);
+    });;
 };
