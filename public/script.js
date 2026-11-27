@@ -153,7 +153,7 @@ function populateEditPage(id, title, content) {
     editPageIdInput.value = id;
     editPageTitleInput.value = title;
     editPageContentInput.value = content;
-    editPagePostReturn.innerText = "Return to post " + id;
+    editPagePostReturn.innerText = "Post " + id;
     editPagePostReturn.style.display = "inline-block";
     postViewId = id;
 }
@@ -249,20 +249,14 @@ async function loadPage(...args) {
 }
 
 // TODO: Redo this to handle the new ways posts can be populated
-// TODO: Rewrite as a synchronous function
-// TODO: Replace "data" with actual arguments
 /**
  * Shows the List page.
  */
-async function showListPage(data) {
+function showListPage(data) {
     hideAllPages();
     if (data?.populate || !listPagePopulated) {
-        if (data?.posts) {
-            populateListPage(data.posts);
-        } else {
-            populateListPage(await (await fetch("/api/posts")).json());
-            listPagePopulated = true;
-        }
+        populateListPage(data.posts);
+        listPagePopulated = true;
     }
 
     listPage.style.display = "block";
@@ -277,7 +271,6 @@ async function showListPage(data) {
     }
 }
 
-// TODO: Replace "data" with actual arguments
 /**
  * Shows the Post page.
  */
@@ -302,7 +295,6 @@ function showPostPage(data) {
 }
 
 // TODO: Find a better way of determining whether the post is the sidebar
-// TODO: Replace "data" with actual arguments
 /**
  * Shows the Edit page.
  */
@@ -331,7 +323,6 @@ function showEditPage(data) {
     }
 }
 
-// TODO: Replace "data" with actual arguments
 /**
  * Shows the Search page.
  */
@@ -345,7 +336,6 @@ function showSearchPage(data) {
     }
 }
 
-// TODO: Replace "data" with actual arguments
 /**
  * Shows the Error page.
  */
@@ -370,7 +360,10 @@ async function showPage(page, data) {
     // List Page
 
     if (page == 1) {
-        await showListPage(data);
+        if (!data?.posts) {
+            data.posts = await (await fetch("/api/posts")).json();
+        }
+        showListPage(data);
     }
 
     // Post Page
@@ -402,12 +395,13 @@ function showError(err) {
     void showPage(0, { "message": err.message });
 }
 
-// TODO: Write a better doc comment here
 /**
  * Pushes a new state to the window history.
+ * @param {string} url The URL that should be displayed.
+ * @param {number} page The page that should be displayed in the content area when this state is popped.
+ * @param {JSON} data Extra data for page display when this state is popped.
  */
 function pushHistoryState(url, page, data) {
-    console.log("Pushed a state: " + url);
     window.history.pushState({ "page": page, "data": data }, "", url);
 }
 
@@ -791,8 +785,6 @@ window.onpopstate = async function (event) {
         return;
     }
 
-    console.log("State popped, going to page " + event.state.page);
-
     if (event.state.page == 1) {
         await loadPage(1);
     } else if (event.state.page == 2) {
@@ -809,6 +801,14 @@ window.onpopstate = async function (event) {
 }
 
 window.onload = async function () {
+
+    populateHeader().catch((err) => {
+        showError(err);
+    });
+
+    populateSidebar().catch((err) => {
+        showError(err);
+    });
 
     let pathnameArray = window.location.pathname.split("/");
     if (pathnameArray.at(-1) == "") {
@@ -844,12 +844,4 @@ window.onload = async function () {
     } else if (pathnamePage == "search") {
         await loadPage(4, { "history": true });
     }
-
-    populateHeader().catch((err) => {
-        showError(err);
-    });
-
-    populateSidebar().catch((err) => {
-        showError(err);
-    });
 };

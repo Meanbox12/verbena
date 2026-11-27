@@ -7,12 +7,12 @@ const fs = require("node:fs");
 const app = express();
 app.disable("x-powered-by");
 
-// TODO: Make the size limit a changeable setting
-const upload = multer({ dest: "public/uploads/temp/", limits: { fileSize: 1000000 } });
-let db;
-
 const PORT = 4000;
-const INDEXFILE = path.join(__dirname, "public", "index.html");
+const INDEX_FILE = path.join(__dirname, "public", "index.html");
+const FILE_SIZE_LIMIT = 1000000;
+
+const upload = multer({ dest: "public/uploads/temp/", limits: { fileSize: FILE_SIZE_LIMIT } });
+let db;
 
 app.use(express.static(path.join(__dirname, "/public")));
 app.use(express.json());
@@ -29,7 +29,7 @@ if (randomCommand != "") {
 }
 
 /**
- * Loads the SQLite database.
+ * Loads Verbena's SQLite database from a file.
  * @param {String} fileName The filename to load the database from.
  * @returns An error if the tables fail to load, or true if they load successfully.
  */
@@ -101,30 +101,41 @@ async function getPostCount() {
     });
 }
 
-// TODO: Repurpose this function into a general generator that takes a length input
+/**
+ * Generates a hexadecimal string of a certain length.
+ * @param {number} length 
+ * @returns {string}
+ */
+function generateHex(length) {
+
+    let hex = "";
+    let letters = ["a", "b", "c", "d", "e", "f"];
+
+    for (let i = 0; i < length; i++) {
+        let char = Math.floor(Math.random() * 16);
+        if (char > 9) {
+            char = letters[char - 10];
+        }
+        hex += char;
+    }
+
+    return hex;
+}
+
 
 /**
  * Generates a unique post ID that is not in use by any other post.
- * @returns {String} The generated post ID.
+ * @returns {String}
  */
 async function generatePostId() {
 
     let id;
-    let letters = ["a", "b", "c", "d", "e", "f"];
     let valid = false;
     let tries = 0;
 
     while (!valid && tries < 100) {
 
-        id = "";
-
-        for (let i = 0; i < 6; i++) {
-            let char = Math.floor(Math.random() * 16);
-            if (char > 9) {
-                char = letters[char - 10];
-            }
-            id += char;
-        }
+        id = generateHex(6);
 
         valid = await new Promise((resolve, reject) => {  // NOSONAR
             db.get("SELECT id FROM posts WHERE id = ?", [id], (err, row) => {
@@ -139,6 +150,8 @@ async function generatePostId() {
                 }
             })
         });
+
+        tries++;
     }
 
     return id;
@@ -146,9 +159,9 @@ async function generatePostId() {
 
 /**
  * Adds a new post to the databse.
- * @param {Number} type The type of the post.
- * @param {String} title The title of the post.
- * @param {String} content The content of the post.
+ * @param {Number} type
+ * @param {String} title
+ * @param {String} content
  * @returns {Promise} A Promise that will either resolve to the newly created post or an error message if the creation fails.
  */
 async function createPost(type, title, content) {
@@ -171,10 +184,10 @@ async function createPost(type, title, content) {
 
 /**
  * Edits a post in the database.
- * @param {Number} id The post ID to be edited.
- * @param {Number} type The new type of the post.
- * @param {String} title The new title of the post.
- * @param {String} content The new content of the post.
+ * @param {Number} id
+ * @param {Number} type
+ * @param {String} title
+ * @param {String} content
  * @returns {Promise} A Promise that will either resolve to the edited post or an error message if the edit fails.
  */
 function editPost(id, type, title, content) {
@@ -205,7 +218,7 @@ function editPost(id, type, title, content) {
 
 /**
  * Deletes a post from the database.
- * @param {String} id The post ID to be deleted.
+ * @param {String} id
  * @returns {Promise} A Promise that will either resolve to the deleted post or an error message if the delete fails.
  */
 async function deletePost(id) {
@@ -233,22 +246,6 @@ async function deletePost(id) {
                     resolve(row);
                 });
             });
-
-            /*
-            for (let i = (row.number + 1); i <= postCount; i++) {
-
-                await new Promise((resolve, reject) => {
-                    db.get("UPDATE posts SET number = ? WHERE number = ? RETURNING *", [i - 1, i], (err, row) => {
-                        if (err) {
-                            return reject(err);
-                        }
-
-                        resolve(row);
-                    });
-                });
-            }
-                */
-
         });
     });
 }
@@ -370,6 +367,11 @@ app.get("/api/info", (req, res) => {
     });
 });
 
+/**
+ * Calculates the SHA256 hash of an input.
+ * @param {*} input 
+ * @returns {string} The SHA256 hash as a string.
+ */
 async function hash(input) {
     const encoder = new TextEncoder();
     const data = encoder.encode(input);
@@ -415,19 +417,19 @@ app.post("/api/upload", upload.single("file"), async (req, res) => {
 });
 
 app.get("/post/:postid", (req, res) => {
-    res.sendFile(INDEXFILE);
+    res.sendFile(INDEX_FILE);
 });
 
 app.get("/edit", (req, res) => {
-    res.sendFile(INDEXFILE);
+    res.sendFile(INDEX_FILE);
 });
 
 app.get("/search", (req, res) => {
-    res.sendFile(INDEXFILE);
+    res.sendFile(INDEX_FILE);
 });
 
 app.get("/", (req, res) => {
-    res.sendFile(INDEXFILE);
+    res.sendFile(INDEX_FILE);
 });
 
 app.listen(PORT, async function () {
