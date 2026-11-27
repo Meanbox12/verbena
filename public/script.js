@@ -32,6 +32,7 @@ const editPageInputs = document.getElementById("edit-page-inputs");
 const editPageInputsOpen = document.getElementById("edit-page-inputs-open");
 const editPageTitle = document.getElementById("edit-page-title");
 const editPageReturn = document.getElementById("edit-page-return");
+const editPagePostReturn = document.getElementById("edit-page-post-return");
 const editPageIdInput = document.getElementById("edit-page-id-input");
 const editPageLoad = document.getElementById("edit-page-load");
 const editPageTitleInput = document.getElementById("edit-page-title-input");
@@ -95,31 +96,10 @@ function showImageViewer(image) {
     imageViewerImage.setAttribute("src", image.src);
     imageViewerImage.setAttribute("alt", image.alt);
     imageViewerImage.setAttribute("title", image.alt);
-    imageViewerAlt.innerText = image.alt;
-}
-
-function initializeHistoryState(object, url) {
-    window.history.replaceState({ "stateNum": 1, "object": object }, "", url);
-}
-
-function pushHistoryState(object, url) {
-
-    stateNum++;
-    console.log("A state was pushed and the new stateNum is " + stateNum);
-
-    window.history.pushState({ "stateNum": stateNum, "object": object }, "", url);
-}
-
-// TODO: Something about this is broken
-function handleReturn() {
-
-    console.log(stateNum);
-
-    if (stateNum == 0) {
-        showPage(1, { "populate": true });
+    if (image.alt) {
+        imageViewerAlt.innerText = image.alt;
     } else {
-        window.history.back();
-        handlePopState(2, window.history.state);
+        imageViewerAlt.innerText = "[ No Title ]";
     }
 }
 
@@ -191,7 +171,8 @@ async function showPage(page, data) {
             postElementTitle.addEventListener("click", function (event) {
                 // Stop the link from actually redirecting
                 event.preventDefault();
-                showPage(2, { populate: true, history: true, post: { id: id, title: title, content: content, created_at: created_at, modified_at: modified_at } });
+
+                showPage(2, { "populate": true, "history": true, "post": { id: id, title: title, content: content, created_at: created_at, modified_at: modified_at } });
             });
 
 
@@ -254,6 +235,9 @@ async function showPage(page, data) {
         editPageIdInput.value = id;
         editPageTitleInput.value = title;
         editPageContentInput.value = content;
+        editPagePostReturn.innerText = "Return to post " + id;
+        editPagePostReturn.style.display = "inline-block";
+        postViewId = id;
     }
 
     // List Page
@@ -261,7 +245,7 @@ async function showPage(page, data) {
     if (page == 1) {
         hideAllPages();
         if (data && data.populate || !listPagePopulated) {
-            if (data.posts) {
+            if (data && data.posts) {
                 await populateListPage(data.posts);
             } else {
                 await populateListPage(await (await fetch("/api/posts")).json());
@@ -275,9 +259,9 @@ async function showPage(page, data) {
             window.scroll(0, previousScroll);
             previousScroll = 0;
         }
-
+        
         if (data && data.history) {
-            pushHistoryState({ "page": 1 }, "/");
+            pushHistoryState("/", 1);
         }
     }
 
@@ -288,7 +272,7 @@ async function showPage(page, data) {
 
         hideAllPages();
         if (data && data.populate) {
-            await populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at, data.post.modified_at);
+            populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at, data.post.modified_at);
             currentPost = data.post;
         }
 
@@ -299,7 +283,7 @@ async function showPage(page, data) {
         window.scroll(0, 0);
 
         if (data && data.history) {
-            pushHistoryState({ "page": 2, "id": data.post.id }, "/post/" + data.post.id);
+            pushHistoryState("/post" + (data && data.post && data.post.id ? "/" + data.post.id : ""), 2, { "populate": true, "post": data.post });
         }
     }
 
@@ -327,7 +311,7 @@ async function showPage(page, data) {
         }
 
         if (data && data.history) {
-            pushHistoryState({ "page": 3 }, "/edit" + (data.post ? "?post=" + (data.post.title ? data.post.id : "sidebar") : ""));
+            pushHistoryState("/edit" + (data && data.post && data.post.id ? "?post=" + data.post.id : ""), 3, { "post": data.post });
         }
     }
 
@@ -338,8 +322,7 @@ async function showPage(page, data) {
         searchPage.style.display = "block";
 
         if (data && data.history) {
-
-            pushHistoryState({ "page": 4 }, "/search");
+            pushHistoryState("/search", 4);
         }
     }
 
@@ -356,29 +339,35 @@ async function showPage(page, data) {
 
 }
 
+function pushHistoryState(url, page, data) {
+    console.log("Pushed a state: " + url);
+    window.history.pushState({ "page": page, "data": data }, "", url);
+}
+
 /**
  * Fetches a post's info from the server using a post ID.
  * @param {String} id The post ID to be fetched.
- * @returns {JSON} A JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
+ * @returns {Promise} A Promise that resolves to a JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
  */
-async function getPost(id) {
+function getPost(id) {
+    return new Promise(async (resolve, reject) => {
+        let postRaw;
 
-    let postRaw;
+        if (id == "sidebar") {
+            postRaw = await fetch("/api/info/4");
+        } else {
+            postRaw = await fetch("/api/post/" + id);
+        }
 
-    if (id == "sidebar") {
-        postRaw = await fetch("/api/info/4");
-    } else {
-        postRaw = await fetch("/api/post/" + id);
-    }
+        let type = postRaw.headers.get("content-type");
 
-    let type = postRaw.headers.get("content-type");
-
-    if (type.includes("application/json")) {
-        let post = await postRaw.json();
-        return post;
-    } else {
-        throw new Error(await postRaw.text());
-    }
+        if (type.includes("application/json")) {
+            let post = await postRaw.json();
+            resolve(post);
+        } else {
+            reject(await postRaw.text());
+        }
+    })
 }
 
 /**
@@ -488,7 +477,7 @@ async function populateSearch() {
         let searchObject = await searchTitle(headerSearchbar.value);
 
         if (searchObject != "") {
-            showPage(1, { populate: true, posts: await searchTitle(headerSearchbar.value) });
+            showPage(1, { "populate": true, "history": true, "posts": await searchTitle(headerSearchbar.value) });
             return;
         } else {
             listPage.innerHTML = "<p class='large-text page-title'>No posts were found for your search.</p>"
@@ -496,7 +485,7 @@ async function populateSearch() {
         }
     }
     else {
-        showPage(1, { populate: true });
+        showPage(1, { "populate": true, "history": true });
     }
 }
 
@@ -517,8 +506,7 @@ headerSearchbarAdvanced.addEventListener("click", function () {
 });
 
 postPageReturn.addEventListener("click", function () {
-    handleReturn();
-    // window.history.back();
+    showPage(1, { "history": true });
 });
 
 postPageRaw.addEventListener("click", async function () {
@@ -548,15 +536,10 @@ postPageEdit.addEventListener("click", async function () {
     showPage(3, { "history": true, "post": { "id": postViewId, "title": post.title, "content": post.content } });
 });
 
-editPageReturn.addEventListener("click", function () {
-    handleReturn();
-    // window.history.back();
-});
-
 editPageLoad.addEventListener("click", async function () {
     if (editPageIdInput.value != "") {
         try {
-            showPage(3, { populate: true, history: false, post: await getPost(editPageIdInput.value) });
+            showPage(3, { "history": true, "post": await getPost(editPageIdInput.value) });
         } catch (err) {
             console.error(err.message);
             editPageIdInput.value = "";
@@ -587,10 +570,6 @@ editPageUploadAlt.addEventListener("input", function () {
     editPageUploadCode.innerText = `<img src="${imgCodeList[1]}" alt="${editPageUploadAlt.value}">`;
 });
 
-errorPageReturn.addEventListener("click", function () {
-    showPage(1, { history: true, populate: !listPagePopulated });
-});
-
 postPageDelete.addEventListener("click", async function () {
 
     let confirmation = confirm("Are you sure you want to delete the post? This action cannot be undone.");
@@ -615,6 +594,14 @@ postPageDelete.addEventListener("click", async function () {
     } else {
         alert("An error occured when deleting the post.");
     }
+});
+
+editPageReturn.addEventListener("click", function () {
+    showPage(1, { "history": true });
+});
+
+editPagePostReturn.addEventListener("click", async function () {
+    showPage(2, { "populate": true, "history": true, "post": await getPost(postViewId) });
 });
 
 editPageInputsOpen.addEventListener("click", function () {
@@ -708,8 +695,11 @@ editPageSave.addEventListener("click", async function () {
 });
 
 searchPageReturn.addEventListener("click", function () {
-    handleReturn();
-    // window.history.back();
+    showPage(1, { "history": true });
+});
+
+errorPageReturn.addEventListener("click", function () {
+    showPage(1, {"history": true} );
 });
 
 imageViewer.addEventListener("click", function () {
@@ -724,56 +714,30 @@ imageViewerImage.addEventListener("click", function (event) {
     event.stopPropagation();
 });
 
-async function handlePopState(type, event) {
-    if (!event.state || event.state == 0) {
+window.onpopstate = async function (event) {
 
-        console.log("A state was popped but there were no states to pop");
-
-        showPage(1, { "populate": true });
-        initializeHistoryState({ "page": 1 }, "/");
-        stateNum++;
+    // Do nothing
+    if (!event.state) {
         return;
     }
 
-    stateNum = event.state.stateNum;
+    console.log("State popped, going to page " + event.state.page);
 
-    console.log("A state was popped and the new stateNum is " + stateNum);
-
-    let eventPage = event.state.object.page;
-
-    if (eventPage == 1) {
+    if (event.state.page == 1) {
         showPage(1);
-        pushHistoryState({ "page": 1 }, "/");
-    } else if (eventPage == 2) {
-
-        let post;
-
-        try {
-            post = await getPost(event.state.object.id);
-        } catch (err) {
-            console.error(err.message);
+    } else if (event.state.page == 2) {
+        if (event.state.data) {
+            console.log({ "populate": true, "post": event.state.data.post });
+            showPage(2, { "populate": true, "post": event.state.data.post });
         }
-
-        showPage(2, { "populate": true, "post": post });
-        if (type == 2) {
-            pushHistoryState({ "page": 2, "id": post.id }, "/post/" + post.id);
+    } else if (event.state.page == 3) {
+        if (event.state.data) {
+            console.log({"post": event.state.data.post });
+            showPage(3, {"post": event.state.data.post });
         }
-    } else if (eventPage == 3) {
-        showPage(3);
-        if (type == 2) {
-            pushHistoryState({ "page": 3 }, "/edit");
-        }
-    } else if (eventPage == 4) {
+    } else if (event.state.page == 4) {
         showPage(4);
-        if (type == 2) {
-            pushHistoryState({ "page": 4 }, "/search");
-        }
     }
-}
-
-// When the browser forward and back buttons are pressed
-onpopstate = async function (event) {
-    handlePopState(1, event);
 }
 
 window.onload = async function () {
@@ -799,7 +763,7 @@ window.onload = async function () {
             }
 
             if (post) {
-                showPage(2, { populate: true, history: true, "post": { id: postId, title: post.title, content: post.content, created_at: post.created_at, modified_at: post.modified_at } });
+                showPage(2, { "populate": true, "history": true, "post": post });
             }
         } else if (pathnamePage == "edit") {
 
@@ -812,22 +776,21 @@ window.onload = async function () {
                 try {
                     post = await getPost(params.get("post"));
                 } catch (err) {
-                    console.error(err.message);
-                    showPage(0, { "message": err.message });
+                    console.error(err);
+                    showPage(0, { "message": err });
                 }
 
                 if (post) {
-                    showPage(3, { "post": post });
+                    showPage(3, { "history": true, "post": post });
                 }
             } else {
-                showPage(3);
+                showPage(3, { "history": true });
             }
         } else if (pathnamePage == "search") {
-            // initializeHistoryState({ history: true }, "/search");
-            showPage(4);
+            showPage(4, { "history": true });
         }
     } else {
-        showPage(1, { populate: true });
+        showPage(1, { "populate": true, "history": true });
     }
 
     populateHeader();
