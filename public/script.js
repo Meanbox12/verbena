@@ -74,8 +74,8 @@ let listPagePopulated = false;
 
 /**
  * Parses a markdown string using the Marked library.
- * @param {String} markdown The string to be parsed.
- * @returns The parsed string as HTML.
+ * @param {string} markdown
+ * @returns {string} The parsed string as HTML.
  */
 function parseMarkdown(markdown) {
     if (faithfulMarkdown) {
@@ -88,8 +88,8 @@ function parseMarkdown(markdown) {
 }
 
 /**
- * Populates the Image Viewer with an image's information.
- * @param {Element} image The image Element.
+ * Populates the Image Viewer with an image Element's information.
+ * @param {Element} image
  */
 function showImageViewer(image) {
     imageViewer.style.display = "flex";
@@ -116,11 +116,11 @@ function hideAllPages() {
 
 /**
  * Populates the Post page with a post.
- * @param {Number} id The post's ID.
- * @param {String} title The post's title.
- * @param {String} content The post's content.
- * @param {Number} created_at The post's creation date.
- * @param {Number} modified_at The post's last modified date.
+ * @param {number} id
+ * @param {string} title
+ * @param {string} content
+ * @param {number} created_at
+ * @param {number} modified_at
  */
 function populatePostPage(id, title, content, created_at, modified_at) {
     postPageTitle.innerText = title;
@@ -143,6 +143,12 @@ function populatePostPage(id, title, content, created_at, modified_at) {
     }
 }
 
+/**
+ * Populates the Edit page with a post.
+ * @param {string} id
+ * @param {string} title
+ * @param {string} content
+ */
 function populateEditPage(id, title, content) {
     editPageIdInput.value = id;
     editPageTitleInput.value = title;
@@ -153,13 +159,13 @@ function populateEditPage(id, title, content) {
 }
 
 /**
- * Creates a Element for a post.
- * @param {Number} id The post's ID.
- * @param {String} title The post's title.
- * @param {String} content The post's content.
- * @param {Number} created_at The post's creation date.
- * @param {Number} modified_at The post's last modified date.
- * @returns {Element} The created HTML element.
+ * Creates a Element for a post (to be added to the List page).
+ * @param {number} id
+ * @param {string} title
+ * @param {string} content
+ * @param {number} created_at
+ * @param {number} modified_at
+ * @returns {Element}
  */
 function createPostElement(id, title, content, created_at, modified_at) {
     let postElement = document.createElement("div");
@@ -208,10 +214,7 @@ function createPostElement(id, title, content, created_at, modified_at) {
  * Populates the List page with post elements.
  * @param {JSON} posts A JSON objects containing the posts to be shown.
  */
-async function populateListPage(posts) {
-
-    //let postsRaw = await fetch("/api/posts");
-    //let posts = await postsRaw.json();
+function populateListPage(posts) {
 
     listPage.innerHTML = "";
 
@@ -233,6 +236,10 @@ async function populateListPage(posts) {
     }
 }
 
+/**
+ * Attempts to call showPage(). Will call showError() if an error is thrown.
+ * @param  {...any} args Arguments to be passed to showPage().
+ */
 async function loadPage(...args) {
     try {
         await showPage(...args);
@@ -241,6 +248,118 @@ async function loadPage(...args) {
     }
 }
 
+// TODO: Redo this to handle the new ways posts can be populated
+// TODO: Rewrite as a synchronous function
+// TODO: Replace "data" with actual arguments
+/**
+ * Shows the List page.
+ */
+async function showListPage(data) {
+    hideAllPages();
+    if (data?.populate || !listPagePopulated) {
+        if (data?.posts) {
+            populateListPage(data.posts);
+        } else {
+            populateListPage(await (await fetch("/api/posts")).json());
+            listPagePopulated = true;
+        }
+    }
+
+    listPage.style.display = "block";
+
+    if (previousScroll != 0) {
+        window.scroll(0, previousScroll);
+        previousScroll = 0;
+    }
+
+    if (data?.history) {
+        pushHistoryState("/", 1);
+    }
+}
+
+// TODO: Replace "data" with actual arguments
+/**
+ * Shows the Post page.
+ */
+function showPostPage(data) {
+    previousScroll = scrollY;
+
+    hideAllPages();
+    if (data?.populate) {
+        populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at, data.post.modified_at);
+        currentPost = data.post;
+    }
+
+    postViewType = 1;
+    postPageRaw.innerText = "View Raw";
+
+    postPage.style.display = "block";
+    window.scroll(0, 0);
+
+    if (data?.history) {
+        pushHistoryState("/post" + (data?.post?.id ? "/" + data.post.id : ""), 2, { "populate": true, "post": data.post });
+    }
+}
+
+// TODO: Find a better way of determining whether the post is the sidebar
+// TODO: Replace "data" with actual arguments
+/**
+ * Shows the Edit page.
+ */
+function showEditPage(data) {
+    hideAllPages();
+    editPage.style.display = "block";
+
+    if (data?.post) {
+        if (!data.post.title) {
+            populateEditPage("sidebar", "Sidebar", data.post.content);
+        } else {
+            populateEditPage(data.post.id, data.post.title, data.post.content);
+        }
+    }
+
+    if (editPageTitleInput.value != "") {
+        editPagePreviewTitle.innerText = editPageTitleInput.value;
+    }
+
+    if (editPageContentInput.value != "") {
+        editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
+    }
+
+    if (data?.history) {
+        pushHistoryState("/edit" + (data?.post?.id ? "?post=" + data.post.id : ""), 3, { "post": data.post });
+    }
+}
+
+// TODO: Replace "data" with actual arguments
+/**
+ * Shows the Search page.
+ */
+function showSearchPage(data) {
+    hideAllPages();
+
+    searchPage.style.display = "block";
+
+    if (data?.history) {
+        pushHistoryState("/search", 4);
+    }
+}
+
+// TODO: Replace "data" with actual arguments
+/**
+ * Shows the Error page.
+ */
+function showErrorPage(data) {
+    hideAllPages();
+
+    if (data?.message) {
+        errorPageText.innerText = data.message;
+    }
+
+    errorPage.style.display = "block";
+}
+
+// TODO: Remove this, and replace instances of showPage() with their respective mini-function (??)
 /**
  * Shows a page in the content area of the site.
  * @param {Number} page The page to be shown. 0 = Error, 1 = List, 2 = Post, 3 = Edit, 4 = Search
@@ -249,118 +368,53 @@ async function loadPage(...args) {
 async function showPage(page, data) {
 
     // List Page
-    // TODO: Redo this to handle the new ways posts can be populated
+
     if (page == 1) {
-
-        hideAllPages();
-        if (data?.populate || !listPagePopulated) {
-            if (data?.posts) {
-                await populateListPage(data.posts);
-            } else {
-                await populateListPage(await (await fetch("/api/posts")).json());
-                listPagePopulated = true;
-            }
-        }
-
-        listPage.style.display = "block";
-
-        if (previousScroll != 0) {
-            window.scroll(0, previousScroll);
-            previousScroll = 0;
-        }
-
-        if (data?.history) {
-            pushHistoryState("/", 1);
-        }
+        await showListPage(data);
     }
 
     // Post Page
     else if (page == 2) {
-
-        previousScroll = scrollY;
-
-        hideAllPages();
-        if (data?.populate) {
-            populatePostPage(data.post.id, data.post.title, data.post.content, data.post.created_at, data.post.modified_at);
-            currentPost = data.post;
-        }
-
-        postViewType = 1;
-        postPageRaw.innerText = "View Raw";
-
-        postPage.style.display = "block";
-        window.scroll(0, 0);
-
-        if (data?.history) {
-            pushHistoryState("/post" + (data?.post?.id ? "/" + data.post.id : ""), 2, { "populate": true, "post": data.post });
-        }
+        showPostPage(data);
     }
 
     // Edit Page
-    // TODO: Find a better way of determining whether the post is the sidebar
     else if (page == 3) {
-        hideAllPages();
-        editPage.style.display = "block";
-
-        if (data?.post) {
-            if (!data.post.title) {
-                populateEditPage("sidebar", "Sidebar", data.post.content);
-            } else {
-                populateEditPage(data.post.id, data.post.title, data.post.content);
-            }
-        }
-
-        if (editPageTitleInput.value != "") {
-            editPagePreviewTitle.innerText = editPageTitleInput.value;
-        }
-
-        if (editPageContentInput.value != "") {
-            editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
-        }
-
-        if (data?.history) {
-            pushHistoryState("/edit" + (data?.post?.id ? "?post=" + data.post.id : ""), 3, { "post": data.post });
-        }
+        showEditPage(data);
     }
 
     // Search Page
     else if (page == 4) {
-        hideAllPages();
-
-        searchPage.style.display = "block";
-
-        if (data?.history) {
-            pushHistoryState("/search", 4);
-        }
+        showSearchPage(data);
     }
 
     // Error Page
     else if (page == 0) {
-        hideAllPages();
-
-        if (data?.message) {
-            errorPageText.innerText = data.message;
-        }
-
-        errorPage.style.display = "block";
+        showErrorPage(data);
     }
-
 }
 
+/**
+ * Shows an error to the user in the console and in the content area.
+ */
 function showError(err) {
     console.error(err);
     void showPage(0, { "message": err.message });
 }
 
+// TODO: Write a better doc comment here
+/**
+ * Pushes a new state to the window history.
+ */
 function pushHistoryState(url, page, data) {
     console.log("Pushed a state: " + url);
     window.history.pushState({ "page": page, "data": data }, "", url);
 }
 
 /**
- * Fetches a post's info from the server using a post ID.
- * @param {String} id The post ID to be fetched.
- * @returns {Promise} A Promise that resolves to a JSON object in the following format: {id: [Post Id], title: [Post Title], content: [Post Content], created_at: [Post Creation Info]}
+ * Fetches a post's info as JSON from the server.
+ * @param {string} id
+ * @returns {JSON}
  */
 async function getPost(id) {
     let postRaw;
@@ -384,7 +438,7 @@ async function getPost(id) {
 
 /**
  * Gets the current post count from the server.
- * @returns {Number} The number of posts.
+ * @returns {number}
  */
 async function getPostCount() {
     return Number.parseInt(await (await fetch("/api/postcount")).text());
@@ -420,12 +474,12 @@ async function populateSidebar() {
 
 /**
  * Toggles the visibility of a modal on the Edit page.
- * @param {Number} page The modal number to be toggled.
+ * @param {number} modal The modal to be toggled. 1 = Editor, 2 = Preview, 3 = Files
  */
-function toggleEditPageModal(page) {
+function toggleEditPageModal(modal) {
     let pageElement;
 
-    switch (page) {
+    switch (modal) {
         case 1:
             pageElement = editPageInputs;
             break;
@@ -464,6 +518,11 @@ async function uploadFile(file) {
     return response;
 }
 
+/**
+ * Searches for posts which contain a string in their title.
+ * @param {string} title 
+ * @returns {JSON} A JSON object containing all posts that fit the search criteria.
+ */
 async function searchTitle(title) {
 
     let response = await fetch("/api/search/" + title);
@@ -483,6 +542,9 @@ async function searchTitle(title) {
     }
 }
 
+/**
+ * Populates the List page using a title search.
+ */
 async function populateSearch() {
     if (headerSearchbar.value && headerSearchbar.value != "") {
 
@@ -725,7 +787,6 @@ imageViewerImage.addEventListener("click", function (event) {
 
 window.onpopstate = async function (event) {
 
-    // Do nothing
     if (!event.state) {
         return;
     }
@@ -754,56 +815,41 @@ window.onload = async function () {
         pathnameArray.pop();
     }
 
-    if (pathnameArray != "") {
+    if (pathnameArray == "") {
+        return await loadPage(1, { "populate": true, "history": true });
+    }
 
-        let pathnamePage = pathnameArray[1].toLowerCase();
+    let pathnamePage = pathnameArray[1].toLowerCase();
 
-        if (pathnamePage == "post") {
-            let postId = pathnameArray[2];
-            let post;
+    if (pathnamePage == "post") {
+        try {
+            await loadPage(2, { "populate": true, "history": true, "post": await getPost(pathnameArray[2]) });
+        } catch (err) {
+            showError(err);
+        }
+    } else if (pathnamePage == "edit") {
+
+        let params = new URLSearchParams(document.location.search);
+
+        if (params.get("post")) {
 
             try {
-                post = await getPost(postId);
+                await loadPage(3, { "history": true, "post": await getPost(params.get("post")) });
             } catch (err) {
-                console.error(err.message);
-                void showPage(0, { "message": err.message });
+                showError(err);
             }
-
-            if (post) {
-                await loadPage(2, { "populate": true, "history": true, "post": post });
-            }
-        } else if (pathnamePage == "edit") {
-
-            let params = new URLSearchParams(document.location.search);
-
-            if (params.get("post")) {
-
-                let post;
-
-                try {
-                    post = await getPost(params.get("post"));
-                } catch (err) {
-                    showError(err);
-                }
-
-                if (post) {
-                    await loadPage(3, { "history": true, "post": post });
-                }
-            } else {
-                await loadPage(3, { "history": true });
-            }
-        } else if (pathnamePage == "search") {
-            await loadPage(4, { "history": true });
+        } else {
+            await loadPage(3, { "history": true });
         }
-    } else {
-        await loadPage(1, { "populate": true, "history": true });
+    } else if (pathnamePage == "search") {
+        await loadPage(4, { "history": true });
     }
 
     populateHeader().catch((err) => {
         showError(err);
-    });;
+    });
 
     populateSidebar().catch((err) => {
         showError(err);
-    });;
+    });
 };
