@@ -153,8 +153,12 @@ function populateEditPage(id, title, content) {
     editPageIdInput.value = id;
     editPageTitleInput.value = title;
     editPageContentInput.value = content;
-    editPagePostReturn.innerText = "Post " + id;
-    editPagePostReturn.style.display = "inline-block";
+    if (id != "sidebar") {
+        editPagePostReturn.innerText = "Post " + id;
+        editPagePostReturn.style.display = "inline-block";
+    } else {
+        editPagePostReturn.style.display = "none";
+    }
     postViewId = id;
 }
 
@@ -294,7 +298,6 @@ function showPostPage(data) {
     }
 }
 
-// TODO: Find a better way of determining whether the post is the sidebar
 /**
  * Shows the Edit page.
  */
@@ -303,8 +306,9 @@ function showEditPage(data) {
     editPage.style.display = "block";
 
     if (data?.post) {
-        if (!data.post.title) {
+        if (data.sidebar) {
             populateEditPage("sidebar", "Sidebar", data.post.content);
+            data.post.id = "sidebar";
         } else {
             populateEditPage(data.post.id, data.post.title, data.post.content);
         }
@@ -604,7 +608,7 @@ postPageEdit.addEventListener("click", async function () {
 editPageLoad.addEventListener("click", async function () {
     if (editPageIdInput.value != "") {
         try {
-            await loadPage(3, { "history": true, "post": await getPost(editPageIdInput.value) });
+            await loadPage(3, { "history": true, "post": await getPost(editPageIdInput.value.toLowerCase()), "sidebar": (editPageIdInput.value.toLowerCase() == "sidebar") });
         } catch (err) {
             console.error(err.message);
             editPageIdInput.value = "";
