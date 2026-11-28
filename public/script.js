@@ -466,6 +466,98 @@ function toggleEditPageModal(modal) {
 }
 
 /**
+ * Creates a new post on the server.
+ * @param {number} type 
+ * @param {string} title 
+ * @param {string} content 
+ * @returns {string} The new post's ID.
+ */
+async function createPost(type, title, content) {
+
+    let response = await fetch("/api/create", {
+        method: "POST",
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify({ "type": type, "title": title, "content": content }),
+    });
+
+    if (response) {
+
+        let responseText = await response.text();
+
+        if (response.status == 201) {
+            return responseText;
+        } else {
+            throw new Error("An error occured:\n" + responseText);
+        }
+
+    } else {
+        throw new Error("An unknown error occured.");
+    }
+}
+
+/**
+ * Modifies an existing post on the server.
+ * @param {string} id 
+ * @param {number} type 
+ * @param {string} title 
+ * @param {string} content 
+ * @returns The modified post's ID.
+ */
+async function modifyPost(id, type, title, content) {
+
+    let response = await fetch("/api/modify/" + id, {
+        method: "PUT",
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify({ "id": id, "type": type, "title": title, "content": content }),
+    });
+
+    if (response) {
+
+        let responseText = await response.text();
+
+        if (response.status == 200) {
+            if (id == "sidebar") {
+                return "sidebar";
+            } else {
+                return responseText;
+            }
+        } else {
+            throw new Error("An error occured:\n" + responseText);
+        }
+    } else {
+        throw new Error("An unknown error occured.");
+    }
+}
+
+/**
+ * Deletes an existing post on the server.
+ * @param {number} id 
+ * @returns {boolean} true if the deletion is successful.
+ */
+async function deletePost(id) {
+    let response = await fetch("/api/delete/" + id, {
+        method: "DELETE"
+    });
+
+    if (response) {
+
+        let responseText = await response.text();
+
+        if (response.status == 200) {
+            return true;
+        } else {
+            throw new Error("An error occurred:\n" + responseText);
+        }
+    } else {
+        throw new Error("An unknown error occurred.");
+    }
+}
+
+/**
  * Uploads a file to the server.
  * @param {File} file 
  * @returns The server's response.
@@ -539,7 +631,7 @@ async function populateSearch() {
 
 headerSearchbar.addEventListener("keydown", async function (event) {
     if (event.code === "Enter") {
-        await populateSearch();
+        headerSearchbarButton.click();
     }
 });
 
@@ -577,7 +669,13 @@ postPageEdit.addEventListener("click", async function () {
         return;
     }
 
-    showEditPage(true, { "id": postViewId, "title": post.title, "content": post.content });
+    showEditPage(true, post);
+});
+
+editPageIdInput.addEventListener("keydown", function (event) {
+    if (event.code === "Enter") {
+        editPageLoad.click();
+    }
 });
 
 editPageLoad.addEventListener("click", async function () {
@@ -592,7 +690,7 @@ editPageLoad.addEventListener("click", async function () {
 
             showEditPage(true, loadedPost);
         } catch (err) {
-            console.error(err.message);
+            console.error(err);
             editPageIdInput.value = "";
         }
     }
@@ -623,27 +721,20 @@ editPageUploadAlt.addEventListener("input", function () {
 
 postPageDelete.addEventListener("click", async function () {
 
+    // TODO: Possibly replace this (and the alert) with a built-in menu
     let confirmation = confirm("Are you sure you want to delete the post? This action cannot be undone.");
 
     if (!confirmation) {
         return;
     }
 
-    let response = await fetch("/api/delete/" + postViewId, {
-        method: "DELETE"
-    });
-
-    if (response) {
-
-        let responseText = await response.text();
-
-        if (responseText != "false") {
+    try {
+        if (await deletePost(postViewId)) {
             window.location.href = "/";
-        } else {
-            alert("An error occured when deleting the post.");
         }
-    } else {
-        alert("An error occured when deleting the post.");
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
     }
 });
 
@@ -697,49 +788,25 @@ editPageUploadSave.addEventListener("click", async function () {
     } else if (response.status == 400 || response.status == 500) {
         editPageUploadCode.innerText = "An error occured when uploading the file.\n" + await response.text();
     } else {
-        editPageUploadCode.innerText = "An unknown error occurred. Please try again later.";
+        editPageUploadCode.innerText = "An unknown error occurred.";
     }
 });
 
 editPageSave.addEventListener("click", async function () {
+    try {
 
-    editPagePreviewContainer.innerHTML = parseMarkdown(editPageContentInput.value);
+        let post;
 
-    let response;
-
-    if (editPageIdInput.value != "") {
-        response = await fetch("/api/edit/" + editPageIdInput.value, {
-            method: "PUT",
-            headers: {
-                "Content-type": "application/json"
-            },
-            body: JSON.stringify({ "id": editPageIdInput.value, "type": 1, "title": editPageTitleInput.value, "content": editPageContentInput.value }),
-        });
-    } else {
-        response = await fetch("/api/create", {
-            method: "POST",
-            headers: {
-                "Content-type": "application/json"
-            },
-            body: JSON.stringify({ "type": 1, "title": editPageTitleInput.value, "content": editPageContentInput.value }),
-        });
-    }
-
-    if (response) {
-
-        let responseText = await response.text();
-
-        if (response.status == 200 || response.status == 201) {
-            if (editPageIdInput.value == "sidebar") {
-                window.location.href = "/";
-            } else {
-                window.location.href = "/post/" + responseText;
-            }
+        if (editPageIdInput.value == "") {
+            post = await createPost(1, editPageTitleInput.value, editPageContentInput.value);
         } else {
-            editPageNotice.innerText = "An error occured when creating the post.\n" + responseText;
+            post = await modifyPost(editPageIdInput.value, 1, editPageTitleInput.value, editPageContentInput.value);
         }
-    } else {
-        editPageNotice.innerText = "An unknown error occured when creating the post.";
+
+        window.location.href = (post == "sidebar" ? "/" : "/post/" + post);
+    } catch (err) {
+        console.error(err.message);
+        editPageNotice.innerText = err.message;
     }
 });
 

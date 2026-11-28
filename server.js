@@ -177,7 +177,7 @@ async function createPost(type, title, content) {
 
             resolve(row);
 
-            console.log("Created new post with ID " + row.id);
+            console.log("Created a new post with ID " + row.id);
         });
     });
 }
@@ -203,6 +203,8 @@ function editPost(id, type, title, content) {
                 }
 
                 resolve(row);
+
+                console.log("Modified post with ID " + row.id);
             });
         } else {
             db.get("UPDATE posts SET type = ?, title = ?, content = ?, modified_at = ? WHERE id = ? RETURNING *", [type, title, content, time, id], (err, row) => {
@@ -211,6 +213,8 @@ function editPost(id, type, title, content) {
                 }
 
                 resolve(row);
+
+                console.log("Modified post with ID " + row.id);
             });
         }
     });
@@ -244,6 +248,8 @@ async function deletePost(id) {
                     }
 
                     resolve(row);
+
+                    console.log("Deleted post with ID " + row.id);
                 });
             });
         });
@@ -260,10 +266,11 @@ app.post("/api/create", async (req, res) => {
         res.status(201).send(createdPost.id);
     } catch (err) {
         res.status(500).send(err.message);
+        console.error(err.message);
     }
 });
 
-app.put("/api/edit/:postid", async (req, res) => {
+app.put("/api/modify/:postid", async (req, res) => {
     try {
         if (!req.body.title || req.body.title == "") {
             res.status(400).send("Post title cannot be empty.");
@@ -274,15 +281,16 @@ app.put("/api/edit/:postid", async (req, res) => {
         res.status(200).send(editedPost.id);
     } catch (err) {
         res.status(500).send(err.message);
+        console.error(err.message);
     }
 });
 
 app.delete("/api/delete/:postid", async (req, res) => {
     try {
         let deletedPost = await deletePost(req.params.postid);
-        res.send(deletedPost.id);
+        res.status(200).send(deletedPost.id);
     } catch (err) {
-        res.send(false);
+        res.status(500).send(err.message);
         console.error(err.message);
     }
 });
