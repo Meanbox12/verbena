@@ -320,10 +320,11 @@ app.get("/api/search/:title", (req, res) => {
 app.get("/api/posts", (req, res) => {
     db.all("SELECT * FROM posts WHERE type = 1", (err, content) => {
         if (err) {
+            res.status(500).send(err.message);
             return console.error(err.message);
         }
 
-        res.json(content);
+        res.status(200).json(content);
     });
 });
 
